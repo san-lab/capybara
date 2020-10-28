@@ -1,0 +1,20 @@
+
+{{define "nodestable"}}
+<table border="1">
+    <tr>
+        <th>IP</th><th>RPCPORT</th><th>Node ID</th><th>Reachable</th><th>Block No</th><th>Last Seen</th>
+    </tr>
+
+    {{range $id, $node := .Nodes}}
+    <tr {{if  $node.IsReachable}}{{else}}class="red"{{end}} >
+        <td>{{$node.RPCIP}}</td>
+    <td align="center">{{$node.RPCPort}}</td>
+    <td>{{$node.ID.Short}}</td>
+    <td>{{$node.IsReachable}}</td>
+    <td>{{$node.BlockNumber}}</td>
+    <td>{{$node.FormattedLastSeen}}</td>
+    </tr>
+
+    {{end}}
+</table>
+{{end}}

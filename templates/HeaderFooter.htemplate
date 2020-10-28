@@ -1,0 +1,86 @@
+{{define "header"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {{if lt .GetRefresh  0}}<meta http-equiv="refresh" content={{.GetRefresh}} >{{end}}
+    <title>Blockchain Network Watchcat</title>
+    <script
+            type="text/javascript"
+            src="/static/vis-network.min.js"
+    ></script>
+<style type="text/css">
+    td{
+        padding: 0px;
+    }
+    tr{
+        padding: 1px;
+    }
+</style>
+</head>
+<body>
+<table><tr>
+    <td>
+        <table border="0" >
+            <tr>
+                <td rowspan="3"><img src="/static/blockchain_64x64.png" align="left"/></td>
+                <td colspan="3"><b>Capybara</b> Ethereum Network Monitoring Tool</td>
+
+            </tr>
+            <tr> <td colspan="3">Reaching the net from: <b> {{.ClientIp}}</b> </td></tr>
+            <tr><td>Network ID: <b>{{.NetworkID}}</b></td><td>Genesis: {{.Genesis}}</td></tr>
+
+        </table>
+    </td>
+    <td>
+        <img src="/static/capy1L-r.png"  height="85"/>
+    </td>
+</tr>
+</table>
+
+
+
+
+    <hr/>
+{{end}}
+
+{{define "footer"}}
+<hr/>
+</body>
+</html>
+{{end}}
+
+{{define "toggleRawMode"}}
+<form action="{{.RequestPath}}" type="POST">
+<input hidden="true" name="togglerawmode" value="yes"/>
+<table>
+    <tr>
+        <td width="150">Raw: {{ .RawMode}}</td>
+        <td><button type="submit">toggle raw</button></td>
+    </tr>
+</table>
+        </form>
+{{end}}
+
+        {{define "refresh"}}
+<form action="{{.RequestPath}}" type="POST">
+<button type="submit" >refresh</button>
+        </form>
+        {{end}}
+{{define "rebuildNet"}}
+<form action="/discovernetwork" type="POST">
+<button type="submit" >rebuild</button>
+</form>
+{{end}}
+
+{{define "netStatus"}}
+  <form action="/magicone" type="POST">
+  <button type="submit" >dashboard</button>
+  </form>
+{{end}}
+
+{{define "rtemplates"}}
+    <form action="/loadtemplates" type="POST">
+    <button type="submit" >templates</button>
+    </form>
+{{end}}

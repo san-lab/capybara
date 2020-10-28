@@ -1,0 +1,95 @@
+{{define "jsforvis"}}
+
+<script type="text/javascript">
+
+    var refIntervalId = setInterval(loadNodes, 3000); // milliseconds
+
+
+
+
+    // create an array with nodes
+    var nodes = new vis.DataSet([]);
+
+    // create an array with edges
+    var edges = new vis.DataSet([]);
+
+    // create a network
+    var container = document.getElementById("mynetwork");
+    var data = {
+        nodes: nodes,
+        edges: edges,
+    };
+    var options = {
+        physics: {enabled: false},
+        layout: {
+            randomSeed: 0,
+            improvedLayout:true,
+            clusterThreshold: 150,
+            hierarchical: {
+                enabled:false,
+                levelSeparation: 150,
+                nodeSpacing: 150,
+                treeSpacing: 200,
+                blockShifting: true,
+                edgeMinimization: true,
+                parentCentralization: true,
+                direction: 'DU',        // UD, DU, LR, RL
+                sortMethod: 'hubsize',  // hubsize, directed
+                shakeTowards: 'leaves'  // roots, leaves
+            }
+        },
+        edges: {arrows:'to'}
+    };
+
+    var network = new vis.Network(container, data, options);
+    var newdata
+
+    function loadNodes() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.responseType = 'json';
+        xhttp.onload = function() {
+            newdata=xhttp.response;
+            network.body.data.nodes.update(newdata.nodes);
+            try {
+                network.body.data.edges.forEach(function(oe) {
+                    var survives = false;
+                    newdata.edges.forEach(function(ne) {
+                        if (ne.id === oe.id) {
+                            survives = true;
+                        }
+                    });
+                    if (!survives) {
+                        edges.remove({id: oe.id});
+                    }
+                });
+            } catch (error) {
+                console.error(error)
+            }
+
+            edges.update(newdata.edges);
+            document.getElementById("nodestable").innerHTML=newdata["nodestable"];
+        }
+        xhttp.onerror = function() {
+            document.getElementById("nodestable").innerText="Error connecting to Capybara"
+        };
+        xhttp.open("GET", "/visnet", true);
+        xhttp.send();
+    }
+
+    function circle (nodes) {
+
+        var ids = nodes.getIds();
+        var r = 160;
+        var aspect = 1.2;
+        var step = 2 * Math.PI / nodes.length;
+        for (var i in ids) {
+            var x0 = aspect * r * Math.cos(i * step);
+            var y0 = r * Math.sin(i * step) - 25;
+            network.moveNode(ids[i], x0, y0);
+        }
+    }
+
+
+
+</script>
+{{end}}

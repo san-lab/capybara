@@ -1,0 +1,56 @@
+{{define "home"}}
+{{template "header" .HeaderData}}
+
+<style type="text/css">
+#mynetwork {
+    width: 600px;
+    height: 400px;
+    border: 2px solid lightgray;
+}
+
+
+.red {
+    color: red;
+}
+
+</style>
+
+
+
+
+{{with .Error}}Error: {{.}}{{end}}
+
+
+
+{{with .BodyData}}
+
+{{if .}}
+        {{if .NetworkID}}
+
+
+<table>
+<tr >
+    <td><div id="mynetwork"></div>
+        <button type="button" onclick="circle(nodes)">Arrange Nodes</button></td>
+  <td valign="top" id="nodestable">
+     {{template "nodestable" .}}
+    <br/>
+
+
+  </td>
+
+</tr>
+</table>
+{{template "jsforvis"}}
+        {{else}}Empty Network :-/{{end}}
+{{else}}
+        No network model :-(
+<script type="text/javascript">
+ location.reload();
+</script>
+{{end}}
+{{end}}
+
+
+{{template "footer" .FooterData}}
+{{end}}
