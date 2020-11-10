@@ -51,7 +51,7 @@
     <td> Input size</td><td>{{len .Input}} </td>
 </tr>
 <tr>
-<td> Input</td><td> <textarea rows="200" cols="15">{{len .Input}}</textarea>  </td>
+<td> Input</td><td> <textarea rows="15" cols="200">{{len .Input}}</textarea>  </td>
 </tr>
 
 </table>
