@@ -3,6 +3,7 @@ package rpcclient
 import (
 	"encoding/json"
 	"time"
+	"strconv"
 )
 
 type EthResponse struct {
@@ -66,8 +67,67 @@ type PeerInfo struct {
 	ID   string `json:"id"`
 }
 
-type TxpoolResult []struct {
+type TxpoolResult struct {
 	Hash                      string    `json:"hash"`
 	IsReceivedFromLocalSource bool      `json:"isReceivedFromLocalSource"`
 	AddedToPoolAt             time.Time `json:"addedToPoolAt"`
 }
+
+type BlockResult struct {
+	Number           string        `json:"number"`
+	Hash             string        `json:"hash"`
+	MixHash          string        `json:"mixHash"`
+	ParentHash       string        `json:"parentHash"`
+	Nonce            string        `json:"nonce"`
+	Sha3Uncles       string        `json:"sha3Uncles"`
+	LogsBloom        string        `json:"logsBloom"`
+	TransactionsRoot string        `json:"transactionsRoot"`
+	StateRoot        string        `json:"stateRoot"`
+	ReceiptsRoot     string        `json:"receiptsRoot"`
+	Miner            string        `json:"miner"`
+	Difficulty       string        `json:"difficulty"`
+	TotalDifficulty  string        `json:"totalDifficulty"`
+	ExtraData        string        `json:"extraData"`
+	Size             string        `json:"size"`
+	GasLimit         string        `json:"gasLimit"`
+	GasUsed          string        `json:"gasUsed"`
+	Timestamp        string        `json:"timestamp"`
+	Uncles           []interface{} `json:"uncles"`
+	Transactions     []TransactionResult `json:"transactions"`
+}
+
+type TransactionResult struct {
+			BlockHash        string `json:"blockHash"`
+			BlockNumber      string `json:"blockNumber"`
+			From             string `json:"from"`
+			Gas              string `json:"gas"`
+			GasPrice         string `json:"gasPrice"`
+			Hash             string `json:"hash"`
+			Input            string `json:"input"`
+			Nonce            string `json:"nonce"`
+			To               string `json:"to"`
+			TransactionIndex string `json:"transactionIndex"`
+			Value            string `json:"value"`
+			V                string `json:"v"`
+			R                string `json:"r"`
+			S                string `json:"s"`
+}
+
+
+func (block *BlockResult) TimestampToTime() time.Time {
+	t , e := strconv.ParseInt(block.Timestamp[2:], 16, 64)
+	if e != nil {
+		return time.Time{}
+	}
+	return time.Unix(t,0)
+
+}
+
+func (block *BlockResult) BlockNumInt64() int64 {
+	blocknum, err := strconv.ParseInt(block.Number[2:], 16, 32)
+	if err != nil {
+		return 0
+	}
+	return blocknum
+}
+

@@ -7,11 +7,11 @@
 
     {{range $id, $node := .Nodes}}
     <tr {{if  $node.IsReachable}}{{else}}class="red"{{end}} >
-        <td>{{$node.RPCIP}}</td>
+        <td>{{range  $url, $bool := $node.RPCURLs}} {{$url}}<br/>{{end}}</td>
     <td align="center">{{$node.RPCPort}}</td>
-    <td>{{$node.ID.Short}}</td>
+    <td><a href="/node?nodeid={{$node.ID}}" target="_blank">  {{$node.ID.Short}}</a> </td>
     <td>{{$node.IsReachable}}</td>
-    <td>{{$node.BlockNumber}}</td>
+    <td><a href="/block?blocknum={{$node.BlockNumber}}" target="_blank">{{$node.BlockNumber}} </a> </td>
     <td>{{$node.FormattedLastSeen}}</td>
     </tr>
 

@@ -9,7 +9,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/san-lab/capybara/templates"
 )
+
+const keyword_action = "action"
+const keyword_nodeid = "nodeid"
+const keyword_blocknum = "blocknum"
 
 func (rpcClient *Client) GetNetwork(rpcendpoint string) (*string, error) {
 	data := rpcClient.NewCallData("net_version")
@@ -64,8 +69,8 @@ func (rpcClient *Client) Initialize(rpcendpoint string) error {
 	if err != nil {
 		return err
 	}
-	rpcClient.Model.Genesis=node.JsonInfo.Protocols.Eth.Genesis
-	rpcClient.LocalInfo.Genesis= node.JsonInfo.Protocols.Eth.Genesis
+	rpcClient.Model.Genesis = node.JsonInfo.Protocols.Eth.Genesis
+	rpcClient.LocalInfo.Genesis = node.JsonInfo.Protocols.Eth.Genesis
 	fmt.Println("Reachable Node!", node.ID)
 	rpcClient.addNode(node)
 	return nil
@@ -84,8 +89,10 @@ func (rpcClient *Client) buildNode(rpcendpoint string) (*Node, error) {
 			return nil, err
 		}
 		node := new(Node)
+		tokens := strings.Split(rpcendpoint, ":")
+		node.RPCPort, _ = strconv.Atoi(tokens[1])
+		node.RPCURLs = map[string]bool{tokens[0]: true}
 		FillNodeFromNodeInfo(node, ni)
-		node.RPCPort, _ = strconv.Atoi(strings.Split(rpcendpoint, ":")[1])
 		node.IsReachable = true
 		node.LastSeen = time.Now()
 		return node, nil
@@ -106,7 +113,7 @@ func (rpcClient *Client) getClientVersion(rpcendpoint string) (*string, error) {
 
 func (rpcClient *Client) findPeersOf(n *Node) error {
 	data := rpcClient.NewCallData("admin_peers")
-	data.Context.TargetRPCEndpoint = n.RPCIP + ":" + strconv.Itoa(n.RPCPort)
+	data.Context.TargetRPCEndpoint = n.PrefRPCURL + ":" + strconv.Itoa(n.RPCPort)
 	pi := new([]PeerInfo)
 	err := rpcClient.actualRpcCall(data, pi)
 	if err != nil {
@@ -126,8 +133,6 @@ func (rpcClient *Client) findPeersOf(n *Node) error {
 
 	return nil
 }
-
-
 
 func (rpcClient *Client) addNode(nd *Node) bool {
 	if _, known := rpcClient.Model.Nodes[nd.ID]; known {
@@ -159,24 +164,34 @@ func (rpcClient *Client) runNodeProbe(nd *Node) {
 
 }
 
+var PortSearchScope = 5
+
 func (rpcClient *Client) probe(nd *Node) {
 	fmt.Println("Probing ", nd.ID)
 	if nd.IsReachable {
 		rpcClient.probeReachableNode(nd)
 	} else {
-		//scan for rpc port
-		for i := -5; i < 5; i++ {
-			port := nd.RPCPort + i
-			rpcendpoint := nd.RPCIP + ":" + strconv.Itoa(port)
-			ni, e := rpcClient.GetNodeInfo(rpcendpoint)
-			if e != nil || ni == nil {
-				continue
+		for url, _ := range nd.RPCURLs {
+			var found = false
+			//scan for rpc port
+			for i := -PortSearchScope; i < PortSearchScope; i++ {
+				port := nd.RPCPort + i
+				rpcendpoint := url + ":" + strconv.Itoa(port)
+				ni, e := rpcClient.GetNodeInfo(rpcendpoint)
+				if e != nil || ni == nil {
+					continue
+				}
+				if ni.ID == string(nd.ID) {
+					FillNodeFromNodeInfo(nd, ni)
+					nd.RPCPort = port
+					nd.IsReachable = true
+					nd.LastSeen = time.Now()
+					nd.PrefRPCURL = url
+					found = true
+					break
+				}
 			}
-			if ni.ID == string(nd.ID) {
-				FillNodeFromNodeInfo(nd, ni)
-				nd.RPCPort = port
-				nd.IsReachable = true
-				nd.LastSeen = time.Now()
+			if found {
 				break
 			}
 		}
@@ -191,7 +206,7 @@ func (rpcClient *Client) probeReachableNode(nd *Node) {
 	if err != nil {
 		log.Println("Error on probing", nd.ID.Short(), err)
 		nd.IsReachable = false
-		nd.Peers=map[NodeID]Peer{}
+		nd.Peers = map[NodeID]Peer{}
 		return
 	}
 	for id, p := range nd.Peers {
@@ -215,11 +230,10 @@ func (rpcClient *Client) probeReachableNode(nd *Node) {
 
 }
 
-
 func (rpcClient *Client) TxPoolOf(nd *Node) error {
 	data := rpcClient.NewCallData("txpool_besuTransactions")
-	data.Context.TargetRPCEndpoint = nd.RPCIP + ":" + strconv.Itoa(nd.RPCPort)
-	txp := new(TxpoolResult)
+	data.Context.TargetRPCEndpoint = nd.PrefRPCURL + ":" + strconv.Itoa(nd.RPCPort)
+	txp := new([]TxpoolResult)
 	err := rpcClient.actualRpcCall(data, txp)
 	if err != nil {
 		nd.IsReachable = false
@@ -227,15 +241,14 @@ func (rpcClient *Client) TxPoolOf(nd *Node) error {
 		return err
 	}
 	nd.LastSeen = time.Now()
-	nd.Txpool = txp
+	nd.Txpool = *txp
 	return nil
 
 }
 
-
 func (rpcClient *Client) IsNodeSyncing(nd *Node) error {
 	data := rpcClient.NewCallData("eth_syncing")
-	data.Context.TargetRPCEndpoint = nd.RPCIP + ":" + strconv.Itoa(nd.RPCPort)
+	data.Context.TargetRPCEndpoint = nd.PrefRPCURL + ":" + strconv.Itoa(nd.RPCPort)
 	sync := new(bool)
 	err := rpcClient.actualRpcCall(data, sync)
 	if err != nil {
@@ -249,21 +262,18 @@ func (rpcClient *Client) IsNodeSyncing(nd *Node) error {
 
 }
 
-
-
-
 func NewUreachableNode(id NodeID, rpcip string, port int) *Node {
 	n := new(Node)
 	n.ID = id
 	n.RPCPort = port
-	n.RPCIP = rpcip
+	n.RPCURLs = map[string]bool{rpcip: true}
 	n.IsReachable = false
 	return n
 }
 
 func (rpcClient *Client) findBlockNoOf(n *Node) error {
 	data := rpcClient.NewCallData("eth_blockNumber")
-	data.Context.TargetRPCEndpoint = n.RPCIP + ":" + strconv.Itoa(n.RPCPort)
+	data.Context.TargetRPCEndpoint = n.PrefRPCURL + ":" + strconv.Itoa(n.RPCPort)
 	bnp := ""
 	err := rpcClient.actualRpcCall(data, &bnp)
 	if err != nil {
@@ -272,4 +282,101 @@ func (rpcClient *Client) findBlockNoOf(n *Node) error {
 	n.LastSeen = time.Now()
 	n.BlockNumber, err = strconv.ParseInt(bnp[2:], 16, 32)
 	return err
+}
+
+func (rpcClient *Client) NodeActions(data *templates.RenderData, rq *http.Request) {
+	data.TemplateName = "nodepage"
+	nodeid := rq.Form.Get(keyword_nodeid)
+	fmt.Println(nodeid)
+	node, ok := rpcClient.Model.Nodes[NodeID(nodeid)]
+	if !ok {
+		data.Error = fmt.Errorf("No such node: " + nodeid)
+		return
+	}
+	action := rq.Form.Get(keyword_action)
+
+	data.BodyData = node
+	switch action {
+	case "addaddress":
+		addr := rq.Form.Get("value")
+		if len(addr) > 0 {
+			node.RPCURLs[addr] = true
+		}
+	case "removeaddress":
+		addr := rq.Form.Get("value")
+		delete(node.RPCURLs, addr)
+	case "setport":
+		port := rq.Form.Get("value")
+		p, err := strconv.Atoi(port)
+		if err != nil {
+			data.Error = err
+			return
+		}
+		node.RPCPort = p
+	default:
+
+	}
+}
+
+var scanrange = 600
+
+func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Request) {
+	data.TemplateName = "blockpage"
+	blockid := rq.Form.Get(keyword_blocknum)
+	var blocknum int64
+	var err error
+	if len(blockid) > 0 {
+		blocknum, err = strconv.ParseInt(blockid, 10, 32)
+		if err != nil {
+			data.Error = err
+			return
+		}
+	} else {
+		blockhex := rq.Form.Get("blockhex")
+		if len(blockhex) < 3 {
+			data.Error = fmt.Errorf("Wrong hex block number")
+			return
+		}
+		blocknum, err = strconv.ParseInt(blockhex[2:], 16, 32)
+		if err != nil {
+			data.Error = err
+			return
+		}
+	}
+
+	action := rq.Form.Get(keyword_action)
+
+
+	var next = true
+	var block *BlockResult
+	for i:=0; next; i++ {
+		var delta = int64(0)
+		switch action {
+		case "forward", "scan_forward":
+			delta = 1
+		case "back", "scan_back":
+			delta = -1
+		}
+
+		fmt.Println("Fetching block No", blocknum)
+		//`{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["0x68B3", true],"id":1}' http://localhost:8546`
+		blockhex := fmt.Sprintf("0x%x", blocknum)
+
+		calldat := rpcClient.NewCallData("eth_getBlockByNumber")
+		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
+		calldat.Command.Params = []interface{}{blockhex, true}
+		block = new(BlockResult)
+		err = rpcClient.actualRpcCall(calldat, block)
+		if err != nil {
+			data.Error = err
+			return
+		}
+		next = false
+		if delta !=0 && len(block.Transactions) == 0 && i < scanrange {
+				blocknum += delta
+				next = true
+
+		}
+	}
+	data.BodyData = block
 }

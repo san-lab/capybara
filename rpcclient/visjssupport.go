@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strconv"
 
-	"strings"
 	"fmt"
+	"strings"
 )
 
 func JSEscape(vn interface{}) template.JS {
@@ -32,25 +32,24 @@ func (bcn *Network) VisjsNodes() []Visnode {
 		nd := bcn.Nodes[NodeID(key)]
 		ports := strconv.Itoa(nd.RPCPort)
 
-		label := "Node At: "+ nd.RPCIP + ":" +ports
-		label += "\nID:"+ nd.ID.Short();
+		label := "Node At: " + nd.PrefRPCURL + ":" + ports
+		label += "\nID:" + nd.ID.Short()
+		//title := "ID: " + string(nd.ID) + "<br/>"
 		title := "Current block: " + strconv.Itoa(int(nd.BlockNumber))
 		title += "<br/> Last seen: " + nd.FormattedLastSeen()
 		title += "<br/> Trailing?: " + fmt.Sprint(bcn.IsTrailing(nd))
 
-
-		txp, err := json.Marshal(nd.Txpool)
-		if err == nil {
-			title += "<br/>TxPool: " + string(txp)
-		} else  {
-			title += "<br/>TxPool: " + fmt.Sprint(err)
-		}
+		//txp, err := json.Marshal(nd.Txpool)
+		//if err == nil {
+		//	title += "<br/>TxPool: " + string(txp)
+		//} else {
+		//	title += "<br/>TxPool: " + fmt.Sprint(err)
+		//}
+		title += "<br/>TxPool: [" + strconv.Itoa(len(nd.Txpool)) +"]"
 
 		title += "<br/>Syncing: " + fmt.Sprint(nd.Syncing)
 
-
-
-		vi := Visnode{Id: nd.ID, Label: label, Title: title, Image: "/static/ethereum_32x32.png", Shape: "image", Font: Font{Align: "left"} }
+		vi := Visnode{Id: nd.ID, Label: label, Title: title, Image: "/static/ethereum_32x32.png", Shape: "image", Font: Font{Align: "left"}}
 		if nd.Syncing {
 			vi.Image = "/static/ethereum-full_32x32_syncing.png"
 		} else if nd.IsReachable {
@@ -61,8 +60,6 @@ func (bcn *Network) VisjsNodes() []Visnode {
 	}
 	return vn
 }
-
-
 
 func (bcn *Network) VisjsEdges() []Visedge {
 	var ve []Visedge
@@ -90,12 +87,12 @@ func (net *Network) VisjsData() Visdata {
 }
 
 func VisjsEdge(base NodeID, addr string, peer NodeID) Visedge {
-	e := Visedge{ID: string(base)+"TO"+string(peer), From: base, To: peer, Label: addr}
+	e := Visedge{ID: string(base) + "TO" + string(peer), From: base, To: peer, Label: addr}
 	e.Color.Color = "blue"
 	e.Color.Highlight = "blue"
 	e.Color.Hover = "green"
 	//e.Arrows = "moving-dot"
-	e.Smooth = strings.Compare(string(base),string(peer)) >0
+	e.Smooth = strings.Compare(string(base), string(peer)) > 0
 	f := Font{Size: 1, Align: "bottom"}
 	e.Font = f
 	e.BorderWidth = 1
@@ -109,25 +106,22 @@ type Visnode struct {
 	Image string `json:"image"`
 	Shape string `json:"shape"`
 	Color Color  `json:"color,omitempty"`
-	Font  Font `json:"font,omitempty"`
+	Font  Font   `json:"font,omitempty"`
 	Title string `json:"title,omitempty"`
 }
 
-
-
 type Visedge struct {
-	ID     string `json:"id,omitempty"`
-	From   NodeID `json:"from"`
-	To     NodeID `json:"to"`
-	Arrows string `json:"arrows,omitempty"`
-	Label  string `json:"label"`
-	Font   Font   `json:"font,omitempty"`
-	Color  Color  `json:"color,omitempty"`
-	Smooth bool   `json:"smooth"`
-	Length int		`json:"length,omitempty"`
-	BorderWidth int `json:"borderWidth,omitempty"`
+	ID              string          `json:"id,omitempty"`
+	From            NodeID          `json:"from"`
+	To              NodeID          `json:"to"`
+	Arrows          string          `json:"arrows,omitempty"`
+	Label           string          `json:"label"`
+	Font            Font            `json:"font,omitempty"`
+	Color           Color           `json:"color,omitempty"`
+	Smooth          bool            `json:"smooth"`
+	Length          int             `json:"length,omitempty"`
+	BorderWidth     int             `json:"borderWidth,omitempty"`
 	ShapeProperties ShapeProperties `json:"shapeProperties,omitempty"`
-
 }
 
 type ShapeProperties struct {
@@ -146,7 +140,7 @@ type Font struct {
 }
 
 type Visdata struct {
-	Nodes []Visnode `json:"nodes"`
-	Edges []Visedge `json:"edges"`
-	NodesTable string `json:"nodestable"`
+	Nodes      []Visnode `json:"nodes"`
+	Edges      []Visedge `json:"edges"`
+	NodesTable string    `json:"nodestable"`
 }

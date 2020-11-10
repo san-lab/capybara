@@ -1,0 +1,45 @@
+{{define "nodepage"}}
+        {{template "header" .HeaderData}}
+
+<style type="text/css">
+    #mynetwork {
+        width: 600px;
+        height: 400px;
+        border: 2px solid lightgray;
+    }
+
+
+    .red {
+        color: red;
+    }
+
+</style>
+
+
+        {{with .Error}}Error: {{.}}{{end}}
+
+
+        {{with .BodyData}}
+{{$id := .ID}}
+<ul>
+<li>Node ID: {{.ID}}</li>
+<li>URLs: <ol>{{range $url, $foo :=  .RPCURLs}}<li><a href="/node?nodeid={{$id}}&action=removeaddress&value={{$url}}">-</a> {{$url}}</li>{{end}}</ol> </li>
+<li>Preferred URL: {{.PrefRPCURL}}</li>
+<li>Port: {{.RPCPort}}</li>
+<li>Syncing: {{.Syncing}}</li>
+<li>Reachable: {{.IsReachable}}</li>
+<li>Current block: {{.BlockNumber}}</li>
+</ul>
+<form action="/node" method="post" >
+<input type="hidden" name="nodeid" id="nodeid" value="{{.ID}}"/>
+<table>
+    <tr><td><input type="submit" name="action" value="setport"></input> </td><td><input type="submit" name="action" value="addaddress" ></td>  <td><input type="text" name="value">  </input>  </td></tr>
+</table>
+
+</form>
+
+        {{end}}
+
+
+        {{template "footer" .FooterData}}
+        {{end}}

@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"strings"
 
+	"bytes"
 	"github.com/san-lab/capybara/rpcclient"
 	"github.com/san-lab/capybara/templates"
 	"strconv"
-	"bytes"
 )
 
 const passwdFile = "http.passwd.json"
@@ -48,6 +48,8 @@ const keyword_templates = "loadtemplates"
 const keyword_setrefresh = "setrefresh"
 const keyword_rpc = "rpc"
 const arg_refreshrate = "rate"
+const keyword_node = "node"
+const keyword_block = "block"
 
 // Handles incoming requests. Some will be forwarded to the RPC client.
 // Assumes the request path has either: 1 part - interpreted as a /command with logic implemented within the client
@@ -61,12 +63,12 @@ func (lhh *LilHttpHandler) Handler(w http.ResponseWriter, r *http.Request) {
 	rdata := templates.RenderData{HeaderData: &lhh.rpcClient.LocalInfo, TemplateName: templates.Home, Client: lhh.rpcClient}
 	rdata.BodyData = lhh.rpcClient.Model
 	rdata.HeaderData.SetRefresh(lhh.refresh)
+	r.ParseForm()
 
 	if len(f) > 0 { // Some URI path provided
 		switch f[0] {
 		case keyword_templates:
 			lhh.renderer.LoadTemplates()
-
 
 		case keyword_init:
 			e := lhh.rpcClient.Initialize(lhh.rpcClient.DefaultRPCEndpoint)
@@ -74,32 +76,36 @@ func (lhh *LilHttpHandler) Handler(w http.ResponseWriter, r *http.Request) {
 		case keyword_rpc:
 			lhh.rpcClient.DirectMethod(w, r)
 			return
+		case keyword_node:
+			lhh.rpcClient.NodeActions(&rdata, r)
+
+		case keyword_block:
+			lhh.rpcClient.BlockActions(&rdata, r)
 		case "printnetwork":
 			lhh.rpcClient.PrintModel(w)
 		case keyword_setrefresh:
-			r.ParseForm()
-			rs :=r.Form.Get(arg_refreshrate)
+			rs := r.Form.Get(arg_refreshrate)
 			ri, e := strconv.Atoi(rs)
-			if e==nil {
-				lhh.refresh=ri
+			if e == nil {
+				lhh.refresh = ri
 				rdata.HeaderData.SetRefresh(ri)
 			} else {
-				rdata.Error=e
+				rdata.Error = e
 			}
 		case "visnodes":
-				w.Header().Add("Content-type","application/json")
-				fmt.Fprintln(w, rpcclient.JSEscape(lhh.rpcClient.Model.VisjsNodes()))
-				return
+			w.Header().Add("Content-type", "application/json")
+			fmt.Fprintln(w, rpcclient.JSEscape(lhh.rpcClient.Model.VisjsNodes()))
+			return
 		case "visedges":
-			w.Header().Add("Content-type","application/json")
+			w.Header().Add("Content-type", "application/json")
 			fmt.Fprintln(w, rpcclient.JSEscape(lhh.rpcClient.Model.VisjsEdges()))
 			return
 		case "visnet":
-			w.Header().Add("Content-type","application/json")
+			w.Header().Add("Content-type", "application/json")
 			vd := lhh.rpcClient.Model.VisjsData()
 			vd.NodesTable = lhh.GetNodesTable()
 
-			fmt.Fprintln(w,rpcclient.JSEscape(vd) )
+			fmt.Fprintln(w, rpcclient.JSEscape(vd))
 			return
 		case "nodestable":
 			fmt.Fprintln(w, lhh.GetNodesTable())
@@ -108,15 +114,13 @@ func (lhh *LilHttpHandler) Handler(w http.ResponseWriter, r *http.Request) {
 		default:
 
 			rdata.HeaderData.SetRefresh(5)
-			rdata.BodyData = fmt.Sprintln(f[0]+" called")
+			rdata.BodyData = fmt.Sprintln(f[0] + " called")
 			lhh.renderer.RenderResponse(w, &rdata)
 			return
 		}
 	}
 
-
 	lhh.renderer.RenderResponse(w, &rdata)
-
 
 }
 
@@ -135,11 +139,12 @@ type Config struct {
 	DumpRPC       bool
 	StartWatchdog bool
 	BasicAuth     bool
-	DebugMode	bool
+	DebugMode     bool
 }
+
 func (lhh *LilHttpHandler) GetNodesTable() string {
-	s :=""
+	s := ""
 	b := bytes.NewBufferString(s)
-	lhh.renderer.Templates.ExecuteTemplate(b,"nodestable", lhh.rpcClient.Model)
+	lhh.renderer.Templates.ExecuteTemplate(b, "nodestable", lhh.rpcClient.Model)
 	return b.String()
 }

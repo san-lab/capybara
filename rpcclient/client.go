@@ -90,9 +90,8 @@ type CallContext struct {
 	Refresh           int
 	Watchdog          bool
 	WatchdogInterval  int64
-	NetworkID string
-	Genesis string
-
+	NetworkID         string
+	Genesis           string
 }
 
 //Implementing the HeaderData methods
@@ -109,8 +108,6 @@ func (rpcClient *Client) SetTimeout(timeout time.Duration) {
 	rpcClient.httpClient.(*http.Client).Timeout = defaultTimeout
 	//}
 }
-
-
 
 //Just a sequence to number the rest calls (the "id" field)
 //TODO: wrap the sequence as a in a Type
