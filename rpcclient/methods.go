@@ -6,10 +6,13 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/san-lab/capybara/templates"
+	"io/ioutil"
+	"encoding/json"
+	"regexp"
+	"sort"
 )
 
 const keyword_action = "action"
@@ -39,9 +42,28 @@ func (rpcClient *Client) GetNodeInfo(rpcendpoint string) (*NodeInfo, error) {
 func (rpcClient *Client) DirectMethod(w http.ResponseWriter, rq *http.Request) (err error) {
 	fmt.Println("Direct method call")
 	rq.ParseForm()
+
+
+
 	meth := rq.Form.Get("method")
 	if len(meth) > 0 {
 		data := rpcClient.NewCallData(meth)
+		//"parN"=parameterValue
+		paramValidator := regexp.MustCompile(`par\d$`)
+		var keys []string
+		for k := range rq.Form {
+			if paramValidator.MatchString(k) {
+				keys = append(keys, k)
+
+			}
+		}
+		if len(keys) > 0 {
+			sort.Strings(keys)
+			for _, pk := range keys {
+				data.Command.Params = append(data.Command.Params, rq.Form[pk][0])
+			}
+		}
+		// End of param handling
 		data.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
 		err := rpcClient.actualRpcCall(data, new(string))
 		fmt.Fprintln(w, "Error: ", err)
@@ -52,27 +74,46 @@ func (rpcClient *Client) DirectMethod(w http.ResponseWriter, rq *http.Request) (
 	return err
 }
 
-func (rpcClient *Client) Initialize(rpcendpoint string) error {
+func (rpcClient *Client) Initialize() error {
+	rpcendpoint := rpcClient.DefaultRPCEndpoint
 	fmt.Println("initializing")
 	net, err := rpcClient.GetNetwork(rpcendpoint)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	rpcClient.Model = new(Network)
-	rpcClient.Model.Nodes = map[NodeID]*Node{}
 	rpcClient.Model.NetworkID = *net
 	rpcClient.LocalInfo.NetworkID = *net
 
-	fmt.Println(rpcendpoint)
-	node, err := rpcClient.buildNode(rpcendpoint)
-	if err != nil {
-		return err
+
+	if rpcClient.Model==nil {
+		rpcClient.Model = new(Network)
 	}
-	rpcClient.Model.Genesis = node.JsonInfo.Protocols.Eth.Genesis
-	rpcClient.LocalInfo.Genesis = node.JsonInfo.Protocols.Eth.Genesis
-	fmt.Println("Reachable Node!", node.ID)
-	rpcClient.addNode(node)
+
+	if rpcClient.Model.Nodes==nil {
+		rpcClient.Model.Nodes = map[NodeID]*Node{}
+		fmt.Println(rpcendpoint)
+		node, err := rpcClient.buildNode(rpcendpoint)
+		if err != nil {
+			return err
+		}
+		rpcClient.Model.Genesis = node.JsonInfo.Protocols.Eth.Genesis
+		rpcClient.LocalInfo.Genesis = node.JsonInfo.Protocols.Eth.Genesis
+		fmt.Println("Reachable Node!", node.ID)
+		rpcClient.addNode(node)
+
+
+		} else {
+			for _, node := range rpcClient.Model.Nodes {
+				go rpcClient.runNodeProbe(node)
+			}
+	}
+
+
+
+
+
+
 	return nil
 }
 
@@ -135,23 +176,62 @@ func (rpcClient *Client) findPeersOf(n *Node) error {
 }
 
 func (rpcClient *Client) addNode(nd *Node) bool {
+
 	if _, known := rpcClient.Model.Nodes[nd.ID]; known {
+		//log.Println("Not adding a known node:", nd.ID)
 		return false
 	}
 	rpcClient.Model.Nodes[nd.ID] = nd
-
-	nd.ticker = time.NewTicker(defaultProbeInterval)
-	//TODO handle potential nil pointer
-	wg, _ := rpcClient.runContext.Value("WaitGroup").(*sync.WaitGroup)
-	wg.Add(1)
 	go rpcClient.runNodeProbe(nd)
 
 	return true
 
 }
 
+var networkfilename = "networkjson.json"
+
+func (rpcClient *Client) initModel() {
+	defer rpcClient.Initialize()
+	model := new(Network)
+	rpcClient.Model = model
+	b,e := ioutil.ReadFile(networkfilename)
+	if e!= nil {
+		log.Println(e)
+		return
+	}
+	e = json.Unmarshal(b, model)
+	if e!= nil {
+		log.Println(e)
+		return
+	}
+
+
+}
+
+
+func (rpcClient *Client) deferSavingConfig() {
+	defer rpcClient.wg.Done()
+	for {
+		select {
+		case <-rpcClient.runContext.Done():
+			b, err := json.Marshal(rpcClient.Model)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			log.Println("Saving net")
+			ioutil.WriteFile(networkfilename, b, 0644 )
+			return
+		}
+	}
+}
+
 func (rpcClient *Client) runNodeProbe(nd *Node) {
 	defer rpcClient.wg.Done()
+	rpcClient.wg.Add(1)
+	nd.ticker = time.NewTicker(defaultProbeInterval)
+	nd.probed = true
+	log.Println("Starting probing on ", nd.ID.Short())
 	for {
 		select {
 		case <-rpcClient.runContext.Done():
@@ -356,9 +436,9 @@ func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Reque
 		var delta = int64(0)
 
 		switch action {
-		case "forward", "scan_forward":
+		case "next", "scan_forward":
 			delta = 1
-		case "back", "scan_back":
+		case "prev", "scan_back":
 			delta = -1
 		}
 		blocknum += delta
@@ -382,5 +462,24 @@ func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Reque
 
 		}
 	}
+	txindex := rq.Form.Get("txindex")
+	i, e := strconv.Atoi(txindex)
+	if e==nil {
+		data.BodyData=block.Transactions[i]
+		rpcClient.Transactions(data,rq)
+		return
+	}
 	data.BodyData = block
+}
+
+func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Request) {
+	data.TemplateName = "txpage"
+
+	//Maybe we already have a transaction
+	if _, ok := data.BodyData.(TransactionResult); ok {
+		return
+	}
+
+
+
 }

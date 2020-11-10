@@ -1,4 +1,4 @@
-{{define "blockpage"}}
+{{define "txpage"}}
 {{template "header" .HeaderData}}
 
 <style type="text/css">
@@ -21,30 +21,33 @@
 
 {{with .BodyData}}
 
+
+
 <table>
 <tr>
-    <td>Number</td><td>{{.Number}} //// {{.BlockNumInt64}}</td>
+<td>Hash</td><td>{{.Hash}}</td>
 </tr>
 <tr>
-    <td>Hash</td><td>{{.Hash}}</td>
-</tr>
-<tr>
-    <td> Timestamp</td><td>{{.Timestamp}}</td>
-</tr>
-<tr>
-    <td> Time</td><td>{{.TimestampToTime}}</td>
-</tr>
-<tr>
-    <td>Miner </td><td>{{.Miner}}</td>
-</tr>
-<tr>
-    <td> Transaction Count</td><td>{{len .Transactions}} </td>
+    <td>BlockNumber</td><td><a href="/block?blockhex={{.BlockNumber}}">{{.BlockNumber}}</a> </td>
 </tr>
 
 <tr>
-    {{$hnum:= .Number}}
-<td> Transactions</td><td>{{range $i, $t := .Transactions}} <a href="/block?blockhex={{$hnum}}&txindex={{$i}}"> {{$t.Hash}} </a> <br/>{{end}}</td>
+    <td> Gas</td><td>{{.Gas}}</td>
 </tr>
+<tr>
+    <td> Nonce</td><td>{{.Nonce}}</td>
+</tr>
+<tr>
+    <td>Value </td><td>{{.Value}}</td>
+</tr>
+<tr>
+    <td> To</td><td>{{.To}} </td>
+</tr>
+
+<tr>
+<td> From</td><td>{{.From}} </td>
+</tr>
+
 
 </table>
 

@@ -39,7 +39,6 @@ func NewHttpHandler(c Config, ctx context.Context) (lhh *LilHttpHandler, err err
 		lhh.initPasswords(ctx)
 	}
 	lhh.refresh = 5
-	lhh.rpcClient.Initialize(c.RPCFirstEntry)
 	return lhh, err
 }
 
@@ -50,6 +49,7 @@ const keyword_rpc = "rpc"
 const arg_refreshrate = "rate"
 const keyword_node = "node"
 const keyword_block = "block"
+const keyword_tx = "transaction"
 
 // Handles incoming requests. Some will be forwarded to the RPC client.
 // Assumes the request path has either: 1 part - interpreted as a /command with logic implemented within the client
@@ -71,14 +71,15 @@ func (lhh *LilHttpHandler) Handler(w http.ResponseWriter, r *http.Request) {
 			lhh.renderer.LoadTemplates()
 
 		case keyword_init:
-			e := lhh.rpcClient.Initialize(lhh.rpcClient.DefaultRPCEndpoint)
+			e := lhh.rpcClient.Initialize()
 			rdata.Error = e
 		case keyword_rpc:
 			lhh.rpcClient.DirectMethod(w, r)
 			return
 		case keyword_node:
 			lhh.rpcClient.NodeActions(&rdata, r)
-
+		case keyword_tx:
+			lhh.rpcClient.Transactions(&rdata, r)
 		case keyword_block:
 			lhh.rpcClient.BlockActions(&rdata, r)
 		case "printnetwork":

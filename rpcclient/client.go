@@ -61,8 +61,8 @@ func NewClient(ethHost string, mock bool, dump bool, ctx context.Context) (c *Cl
 	c.wg, _ = ctx.Value("WaitGroup").(*sync.WaitGroup)
 	c.blockedAddresses = map[string]bool{}
 	c.runContext = ctx
-	c.Model = new(Network)
-
+	c.initModel()
+	go c.deferSavingConfig()
 	return
 }
 
@@ -124,6 +124,9 @@ func (rpcClient *Client) actualRpcCall(data *CallData, result interface{}) error
 	}
 	data.Command.Id = rpcClient.nextID()
 	jcom, _ := json.Marshal(data.Command)
+	if rpcClient.DebugMode {
+		log.Println(string(jcom))
+	}
 
 	host := "http://" + data.Context.TargetRPCEndpoint
 
@@ -148,6 +151,9 @@ func (rpcClient *Client) actualRpcCall(data *CallData, result interface{}) error
 		return err
 	}
 	respBytes, err := ioutil.ReadAll(resp.Body)
+	if rpcClient.DebugMode {
+		log.Println(string(respBytes))
+	}
 	if err != nil {
 		rpcClient.log(fmt.Sprintf("%s", err))
 		return err

@@ -26,6 +26,7 @@ type Node struct {
 	LastSeen    time.Time
 	Txpool      []TxpoolResult
 	Syncing     bool
+	probed     bool
 }
 
 func (nt *Network) IsTrailing(nd *Node) bool {
