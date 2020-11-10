@@ -47,7 +47,9 @@
 <tr>
 <td> From</td><td>{{.From}} </td>
 </tr>
-
+<tr>
+    <td> Input</td><td>{{.Input}} </td>
+</tr>
 
 </table>
 
