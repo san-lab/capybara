@@ -345,19 +345,23 @@ func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Reque
 	}
 
 	action := rq.Form.Get(keyword_action)
-
+	var scan = false
+	if action=="scan_forward" || action=="scan_back" {
+		scan = true
+	}
 
 	var next = true
 	var block *BlockResult
 	for i:=0; next; i++ {
 		var delta = int64(0)
+
 		switch action {
 		case "forward", "scan_forward":
 			delta = 1
 		case "back", "scan_back":
 			delta = -1
 		}
-
+		blocknum += delta
 		fmt.Println("Fetching block No", blocknum)
 		//`{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["0x68B3", true],"id":1}' http://localhost:8546`
 		blockhex := fmt.Sprintf("0x%x", blocknum)
@@ -372,8 +376,8 @@ func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Reque
 			return
 		}
 		next = false
-		if delta !=0 && len(block.Transactions) == 0 && i < scanrange {
-				blocknum += delta
+		if scan && len(block.Transactions) == 0 && i < scanrange {
+
 				next = true
 
 		}
