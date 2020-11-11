@@ -61,8 +61,9 @@ func NewClient(ethHost string, mock bool, dump bool, ctx context.Context) (c *Cl
 	c.wg, _ = ctx.Value("WaitGroup").(*sync.WaitGroup)
 	c.blockedAddresses = map[string]bool{}
 	c.runContext = ctx
-	c.initModel()
 	go c.deferSavingConfig()
+	c.initModel()
+	log.Println("Init done")
 	return
 }
 
