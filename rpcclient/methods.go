@@ -213,6 +213,7 @@ func (rpcClient *Client) initModel() {
 
 
 func (rpcClient *Client) deferSavingConfig() {
+	rpcClient.wg.Add(1)
 	defer rpcClient.wg.Done()
 	for {
 		select {
