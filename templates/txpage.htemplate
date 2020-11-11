@@ -21,7 +21,7 @@
 
 {{with .BodyData}}
 
-<form action="/block" method="get" >
+
 <input type="hidden" name="blockhex" value="{{.BlockNumber}}"/>
 <table>
     <tr>
@@ -33,7 +33,7 @@
 
     </tr>
 </table>
-</form>
+
 
 <table>
 <tr>

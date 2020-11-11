@@ -58,10 +58,13 @@
 
 <tr>
     {{$hnum:= .Number}}
-<td> Transactions</td><td>{{range $i, $t := .Transactions}} {{$t.TransactionIndex}}<a href="/block?blockhex={{$hnum}}&txindex={{$i}}"> {{$t.Hash}} </a> <br/>{{end}}</td><td>{{len $t.Input}}</td>
-</tr>
+<td> Transactions</td><td> <table>{{range $i, $t := .Transactions}}<tr>
+                                                <td>{{$t.TransactionIndex}}</td>
+                                                <td><a href="/block?blockhex={{$hnum}}&txindex={{$i}}"> {{$t.Hash}} </a></td>
+                                                <td> [{{len $t.Input}}] <br/>{{end}}</td></tr>  </table></td>
+                                                                    </tr>
 
-</table>
+                            </table>
 
 
 
