@@ -90,7 +90,7 @@ func (rpcClient *Client) Initialize() error {
 		rpcClient.Model = new(Network)
 	}
 
-	if rpcClient.Model.Nodes==nil {
+	if rpcClient.Model.Nodes==nil || len(rpcClient.Model.Nodes)==0   {
 		rpcClient.Model.Nodes = map[NodeID]*Node{}
 		fmt.Println(rpcendpoint)
 		node, err := rpcClient.buildNode(rpcendpoint)
@@ -105,7 +105,10 @@ func (rpcClient *Client) Initialize() error {
 
 		} else {
 			for _, node := range rpcClient.Model.Nodes {
-				go rpcClient.runNodeProbe(node)
+				if ! node.probed {
+					go rpcClient.runNodeProbe(node)
+				}
+
 			}
 	}
 
