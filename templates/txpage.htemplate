@@ -21,7 +21,19 @@
 
 {{with .BodyData}}
 
+<form action="/block" method="get" >
+<input type="hidden" name="blockhex" value="{{.BlockNumber}}"/>
+<table>
+    <tr>
 
+
+        <td><input type="submit" value="prev" name="action" /> </td>
+        <td><input type="submit" value="next" name="action" /> </td>
+
+
+    </tr>
+</table>
+</form>
 
 <table>
 <tr>
@@ -48,6 +60,9 @@
 <td> From</td><td>{{.From}} </td>
 </tr>
 <tr>
+    <td> Nonce</td><td>{{.Nonce}} </td>
+</tr>
+<tr>
     <td> Input size</td><td>{{len .Input}} </td>
 </tr>
 <tr>
@@ -57,19 +72,7 @@
 </table>
 
 
-<form action="/block" method="get" >
-<input type="hidden" name="blockhex" value="{{.Number}}"/>
-<table>
-<tr>
 
-        <td><input type="submit" value="scan_back" name="action" /> </td>
-        <td><input type="submit" value="prev" name="action" /> </td>
-        <td><input type="submit" value="next" name="action" /> </td>
-        <td><input type="submit" value="scan_forward" name="action" /> </td>
-
-</tr>
-</table>
-</form>
 {{end}}
 
 

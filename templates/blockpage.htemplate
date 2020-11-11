@@ -21,6 +21,21 @@
 
 {{with .BodyData}}
 
+
+<form action="/block" method="get" >
+<input type="hidden" name="blockhex" value="{{.Number}}"/>
+<table>
+    <tr>
+
+        <td><input type="submit" value="scan_back" name="action" /> </td>
+        <td><input type="submit" value="prev" name="action" /> </td>
+        <td><input type="submit" value="next" name="action" /> </td>
+        <td><input type="submit" value="scan_forward" name="action" /> </td>
+
+    </tr>
+</table>
+</form>
+
 <table>
 <tr>
     <td>Number</td><td>{{.Number}} //// {{.BlockNumInt64}}</td>
@@ -43,25 +58,13 @@
 
 <tr>
     {{$hnum:= .Number}}
-<td> Transactions</td><td>{{range $i, $t := .Transactions}} <a href="/block?blockhex={{$hnum}}&txindex={{$i}}"> {{$t.Hash}} </a> <br/>{{end}}</td>
+<td> Transactions</td><td>{{range $i, $t := .Transactions}} {{$t.TransactionIndex}}<a href="/block?blockhex={{$hnum}}&txindex={{$i}}"> {{$t.Hash}} </a> <br/>{{end}}</td><td>{{len $t.Input}}</td>
 </tr>
 
 </table>
 
 
-<form action="/block" method="get" >
-<input type="hidden" name="blockhex" value="{{.Number}}"/>
-<table>
-<tr>
 
-        <td><input type="submit" value="scan_back" name="action" /> </td>
-        <td><input type="submit" value="prev" name="action" /> </td>
-        <td><input type="submit" value="next" name="action" /> </td>
-        <td><input type="submit" value="scan_forward" name="action" /> </td>
-
-</tr>
-</table>
-</form>
 {{end}}
 
 
