@@ -444,6 +444,20 @@ func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Reque
 			delta = 1
 		case "prev", "scan_back":
 			delta = -1
+		case "find_tx":
+			txHash := rq.Form.Get("tx_hash")
+			calldat := rpcClient.NewCallData("eth_getTransactionByHash")
+			calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
+			calldat.Command.Params = []interface{}{txHash}
+			transaction = new(TransactionResult)
+			err = rpcClient.actualRpcCall(calldat, transaction)
+			if err != nil {
+				data.Error = err
+				return
+			}
+			data.BodyData=transaction
+			rpcClient.Transactions(data,rq)
+			return
 		}
 		blocknum += delta
 		fmt.Println("Fetching block No", blocknum)
