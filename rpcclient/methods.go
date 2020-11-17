@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"encoding/json"
 	"github.com/san-lab/capybara/templates"
 	"io/ioutil"
-	"encoding/json"
 	"regexp"
 	"sort"
 )
@@ -42,8 +42,6 @@ func (rpcClient *Client) GetNodeInfo(rpcendpoint string) (*NodeInfo, error) {
 func (rpcClient *Client) DirectMethod(w http.ResponseWriter, rq *http.Request) (err error) {
 	fmt.Println("Direct method call")
 	rq.ParseForm()
-
-
 
 	meth := rq.Form.Get("method")
 	if len(meth) > 0 {
@@ -85,12 +83,11 @@ func (rpcClient *Client) Initialize() error {
 	rpcClient.Model.NetworkID = *net
 	rpcClient.LocalInfo.NetworkID = *net
 
-
-	if rpcClient.Model==nil {
+	if rpcClient.Model == nil {
 		rpcClient.Model = new(Network)
 	}
 
-	if rpcClient.Model.Nodes==nil || len(rpcClient.Model.Nodes)==0   {
+	if rpcClient.Model.Nodes == nil || len(rpcClient.Model.Nodes) == 0 {
 		rpcClient.Model.Nodes = map[NodeID]*Node{}
 		fmt.Println(rpcendpoint)
 		node, err := rpcClient.buildNode(rpcendpoint)
@@ -102,20 +99,14 @@ func (rpcClient *Client) Initialize() error {
 		fmt.Println("Reachable Node!", node.ID)
 		rpcClient.addNode(node)
 
-
-		} else {
-			for _, node := range rpcClient.Model.Nodes {
-				if ! node.probed {
-					go rpcClient.runNodeProbe(node)
-				}
-
+	} else {
+		for _, node := range rpcClient.Model.Nodes {
+			if !node.probed {
+				go rpcClient.runNodeProbe(node)
 			}
+
+		}
 	}
-
-
-
-
-
 
 	return nil
 }
@@ -197,20 +188,18 @@ func (rpcClient *Client) initModel() {
 	defer rpcClient.Initialize()
 	model := new(Network)
 	rpcClient.Model = model
-	b,e := ioutil.ReadFile(networkfilename)
-	if e!= nil {
+	b, e := ioutil.ReadFile(networkfilename)
+	if e != nil {
 		log.Println(e)
 		return
 	}
 	e = json.Unmarshal(b, model)
-	if e!= nil {
+	if e != nil {
 		log.Println(e)
 		return
 	}
 
-
 }
-
 
 func (rpcClient *Client) deferSavingConfig() {
 	rpcClient.wg.Add(1)
@@ -224,7 +213,7 @@ func (rpcClient *Client) deferSavingConfig() {
 				return
 			}
 			log.Println("Saving net")
-			ioutil.WriteFile(networkfilename, b, 0644 )
+			ioutil.WriteFile(networkfilename, b, 0644)
 			return
 		}
 	}
@@ -407,6 +396,8 @@ var scanrange = 600
 func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Request) {
 	data.TemplateName = "blockpage"
 	blockid := rq.Form.Get(keyword_blocknum)
+	txHash := rq.Form.Get("tx_hash")
+	action := rq.Form.Get(keyword_action)
 	var blocknum int64
 	var err error
 	if len(blockid) > 0 {
@@ -415,6 +406,23 @@ func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Reque
 			data.Error = err
 			return
 		}
+	} else if len(txHash) > 0 && action == "find_tx" {
+		if len(txHash) != 66 {
+			data.Error = fmt.Errorf("Wrong tx hash")
+			return
+		}
+		calldat := rpcClient.NewCallData("eth_getTransactionByHash")
+		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
+		calldat.Command.Params = []interface{}{txHash}
+		transaction := new(TransactionResult)
+		err = rpcClient.actualRpcCall(calldat, transaction)
+		if err != nil {
+			data.Error = err
+			return
+		}
+		data.BodyData = transaction
+		rpcClient.Transactions(data, rq)
+		return
 	} else {
 		blockhex := rq.Form.Get("blockhex")
 		if len(blockhex) < 3 {
@@ -428,15 +436,14 @@ func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Reque
 		}
 	}
 
-	action := rq.Form.Get(keyword_action)
 	var scan = false
-	if action=="scan_forward" || action=="scan_back" {
+	if action == "scan_forward" || action == "scan_back" {
 		scan = true
 	}
 
 	var next = true
 	var block *BlockResult
-	for i:=0; next; i++ {
+	for i := 0; next; i++ {
 		var delta = int64(0)
 
 		switch action {
@@ -462,15 +469,15 @@ func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Reque
 		next = false
 		if scan && len(block.Transactions) == 0 && i < scanrange {
 
-				next = true
+			next = true
 
 		}
 	}
 	txindex := rq.Form.Get("txindex")
 	i, e := strconv.Atoi(txindex)
-	if e==nil {
-		data.BodyData=block.Transactions[i]
-		rpcClient.Transactions(data,rq)
+	if e == nil {
+		data.BodyData = block.Transactions[i]
+		rpcClient.Transactions(data, rq)
 		return
 	}
 	data.BodyData = block
@@ -483,7 +490,5 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 	if _, ok := data.BodyData.(TransactionResult); ok {
 		return
 	}
-
-
 
 }
