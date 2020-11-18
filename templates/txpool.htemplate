@@ -1,0 +1,41 @@
+{{define "txpoolpage"}}
+{{template "header" .HeaderData}}
+
+<style type="text/css">
+#mynetwork {
+    width: 600px;
+    height: 400px;
+    border: 2px solid lightgray;
+}
+
+
+.red {
+    color: red;
+}
+
+</style>
+
+
+{{with .Error}}Error: {{.}}{{end}}
+
+
+{{with .BodyData}}
+
+
+<table>
+	<tr>
+		<td> Transactions</td><td> <table>{{range $i, $t := .Transactions}}<tr>
+                                                <td><a href="/txpoolTx?txHash={{$t.Hash}}"> {{$t.Hash}} </a>{{end}}</td>
+                                                                    </tr>
+			</table>
+		</td>
+	</tr>
+</table>
+
+
+
+{{end}}
+
+
+{{template "footer" .FooterData}}
+{{end}}

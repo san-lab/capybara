@@ -306,7 +306,7 @@ func (rpcClient *Client) probeReachableNode(nd *Node) {
 func (rpcClient *Client) TxPoolOf(nd *Node) error {
 	data := rpcClient.NewCallData("txpool_besuTransactions")
 	data.Context.TargetRPCEndpoint = nd.PrefRPCURL + ":" + strconv.Itoa(nd.RPCPort)
-	txp := new([]TxpoolResult)
+	txp := new([]TxpoolTransaction)
 	err := rpcClient.actualRpcCall(data, txp)
 	if err != nil {
 		nd.IsReachable = false
@@ -396,7 +396,6 @@ var scanrange = 600
 func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Request) {
 	data.TemplateName = "blockpage"
 	blockid := rq.Form.Get(keyword_blocknum)
-	txHash := rq.Form.Get("tx_hash")
 	action := rq.Form.Get(keyword_action)
 	var blocknum int64
 	var err error
@@ -406,23 +405,8 @@ func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Reque
 			data.Error = err
 			return
 		}
-	} else if len(txHash) > 0 && action == "find_tx" {
-		if len(txHash) != 66 {
-			data.Error = fmt.Errorf("Wrong tx hash")
-			return
-		}
-		calldat := rpcClient.NewCallData("eth_getTransactionByHash")
-		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
-		calldat.Command.Params = []interface{}{txHash}
-		transaction := new(TransactionResult)
-		err = rpcClient.actualRpcCall(calldat, transaction)
-		if err != nil {
-			data.Error = err
-			return
-		}
-		data.BodyData = transaction
+	} else if action == "find_tx" {
 		rpcClient.Transactions(data, rq)
-		return
 	} else {
 		blockhex := rq.Form.Get("blockhex")
 		if len(blockhex) < 3 {
@@ -473,22 +457,105 @@ func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Reque
 
 		}
 	}
-	txindex := rq.Form.Get("txindex")
-	i, e := strconv.Atoi(txindex)
-	if e == nil {
-		data.BodyData = block.Transactions[i]
-		rpcClient.Transactions(data, rq)
-		return
-	}
 	data.BodyData = block
 }
 
 func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Request) {
 	data.TemplateName = "txpage"
 
-	//Maybe we already have a transaction
-	if _, ok := data.BodyData.(TransactionResult); ok {
+	var err error
+
+	action := rq.Form.Get(keyword_action)
+	blockhex := rq.Form.Get("blockhex")
+	if action == "find_tx" {
+		txHash := rq.Form.Get("tx_hash")
+		if len(txHash) != 66 {
+			data.Error = fmt.Errorf("Wrong tx hash")
+			return
+		}
+		calldat := rpcClient.NewCallData("eth_getTransactionByHash")
+		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
+		calldat.Command.Params = []interface{}{txHash}
+		transaction := new(TransactionResult)
+		err := rpcClient.actualRpcCall(calldat, transaction)
+		if err != nil {
+			data.Error = err
+			return
+		}
+		data.BodyData = transaction
+		return
+	} else if len(blockhex) > 0 {
+		if len(blockhex) < 3 {
+			data.Error = fmt.Errorf("Wrong hex block number")
+			return
+		}
+		calldat := rpcClient.NewCallData("eth_getBlockByNumber")
+		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
+		calldat.Command.Params = []interface{}{blockhex, true}
+		block := new(BlockResult)
+		err = rpcClient.actualRpcCall(calldat, block)
+		if err != nil {
+			data.Error = err
+			return
+		}
+		txindex := rq.Form.Get("txindex")
+		i, e := strconv.Atoi(txindex)
+		if e == nil {
+			data.BodyData = block.Transactions[i]
+			return
+		} else {
+			data.Error = fmt.Errorf("Wrong blockNumber and txIndex")
+			return
+		}
+	} else {
+		data.Error = fmt.Errorf("Unknown parameters")
 		return
 	}
+}
 
+func (rpcClient *Client) TxPool(data *templates.RenderData, rq *http.Request) {
+	data.TemplateName = "txpoolpage"
+	calldat := rpcClient.NewCallData("txpool_besuTransactions")
+	calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
+	calldat.Command.Params = []interface{}{}
+	var txPoolList []TxpoolTransaction
+	err := rpcClient.actualRpcCall(calldat, &txPoolList)
+	txpool := new(TxPoolResult)
+	txpool.Transactions = txPoolList
+	if err != nil {
+		data.Error = err
+		return
+	}
+	data.BodyData = txpool
+	return
+}
+
+type pendingTxReq struct {
+	FilterOptions filterOptions
+}
+
+type filterOptions struct {
+	From EQField `json:"from"`
+}
+
+type EQField struct {
+	EQ string `json:"eq"`
+}
+
+func (rpcClient *Client) TxPoolTx(data *templates.RenderData, rq *http.Request) {
+	data.TemplateName = "txpoolTx"
+	txHash := rq.Form.Get("txHash")
+	calldat := rpcClient.NewCallData("txpool_besuPendingTransaction")
+	calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
+	txPoolTx := new(TxPoolTransactionResult)
+	pendingTxReq := new(pendingTxReq)
+	pendingTxReq.FilterOptions.From.EQ = txHash
+	calldat.Command.Params = []interface{}{10000, pendingTxReq}
+	err := rpcClient.actualRpcCall(calldat, txPoolTx)
+	if err != nil {
+		data.Error = err
+		return
+	}
+	data.BodyData = txPoolTx
+	return
 }

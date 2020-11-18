@@ -1,4 +1,4 @@
-{{define "txpage"}}
+{{define "txpoolTx"}}
 {{template "header" .HeaderData}}
 
 <style type="text/css">
@@ -21,13 +21,11 @@
 
 {{with .BodyData}}
 
-<form action="/transaction" method="get" >
+<form action="/txpoolTx" method="get" >
 <table>
     <tr>
 
-        <td><input type="submit" value="prev" name="action" /> </td>
-        <td><input type="submit" value="next" name="action" /> </td>
-        <td><input type="text" value="tx hash" name="tx_hash" /> </td>
+        <td><input type="text" value="tx hash" name="txHash" /> </td>
         <td><input type="submit" value="find_tx" name="action" /> </td>
 
     </tr>
@@ -37,9 +35,6 @@
 <table>
 <tr>
 <td>Hash</td><td>{{.Hash}}</td>
-</tr>
-<tr>
-    <td>BlockNumber</td><td><a href="/block?blockhex={{.BlockNumber}}">{{.BlockNumber}}</a> </td>
 </tr>
 
 <tr>
