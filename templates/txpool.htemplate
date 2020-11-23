@@ -21,11 +21,23 @@
 
 {{with .BodyData}}
 
+<form action="/txpoolTx" method="get" >
+<table>
+    <tr>
+                <td><input type="text" value="from" name="from" /> </td>
+                <td><input type="text" value="to" name="to" /> </td>
+                <td><input type="text" value="min nonce" name="nonce" /> </td>
+                <td><input type="submit" value="Find TxPool" name="find_txPool" /> </td>
+
+        </tr>
+</table>
+</form>
+
 
 <table>
 	<tr>
 		<td> Transactions</td><td> <table>{{range $i, $t := .Transactions}}<tr>
-                                                <td><a href="/txpoolTx?txHash={{$t.Hash}}"> {{$t.Hash}} </a>{{end}}</td>
+                                                <td>{{$t.Hash}}{{end}}</td>
                                                                     </tr>
 			</table>
 		</td>

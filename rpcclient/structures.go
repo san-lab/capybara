@@ -117,6 +117,10 @@ type TxpoolTransaction struct {
 	AddedToPoolAt             time.Time `json:"addedToPoolAt"`
 }
 
+type TxPoolTransactionList struct {
+	Transactions []TxPoolTransactionResult
+}
+
 type TxPoolTransactionResult struct {
 	From     string `json:"from"`
 	Gas      string `json:"gas"`

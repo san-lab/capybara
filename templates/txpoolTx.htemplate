@@ -24,45 +24,53 @@
 <form action="/txpoolTx" method="get" >
 <table>
     <tr>
-
-        <td><input type="text" value="tx hash" name="txHash" /> </td>
-        <td><input type="submit" value="find_tx" name="action" /> </td>
+            <td><input type="text" value="from" name="from" /> </td>
+            <td><input type="text" value="to" name="to" /> </td>
+            <td><input type="text" value="min nonce" name="nonce" /> </td>
+            <td><input type="submit" value="Find TxPool" name="find_txPool" /> </td>
 
     </tr>
 </table>
 </form>
 
 <table>
-<tr>
-<td>Hash</td><td>{{.Hash}}</td>
-</tr>
+    <tr>
+    <td>Found Transactions:</td>
+    </tr>
+    {{range $i, $t := .Transactions}}
+    <tr>
+    <td>Hash</td><td>{{$t.Hash}}</td>
+    </tr>
 
-<tr>
-    <td> Gas</td><td>{{.Gas}}</td>
-</tr>
-<tr>
-    <td> Nonce</td><td>{{.Nonce}}</td>
-</tr>
-<tr>
-    <td>Value </td><td>{{.Value}}</td>
-</tr>
-<tr>
-    <td> To</td><td>{{.To}} </td>
-</tr>
+    <tr>
+        <td> Gas</td><td>{{$t.Gas}}</td>
+    </tr>
+    <tr>
+        <td> Nonce</td><td>{{$t.Nonce}}</td>
+    </tr>
+    <tr>
+        <td>Value </td><td>{{$t.Value}}</td>
+    </tr>
+    <tr>
+        <td> To</td><td>{{$t.To}} </td>
+    </tr>
 
-<tr>
-<td> From</td><td>{{.From}} </td>
-</tr>
-<tr>
-    <td> Nonce</td><td>{{.Nonce}} </td>
-</tr>
-<tr>
-    <td> Input size</td><td>{{len .Input}} </td>
-</tr>
-<tr>
-<td> Input</td><td> <textarea rows="15" cols="120">{{.Input}}</textarea>  </td>
-</tr>
-
+    <tr>
+    <td> From</td><td>{{$t.From}} </td>
+    </tr>
+    <tr>
+        <td> Nonce</td><td>{{$t.Nonce}} </td>
+    </tr>
+    <tr>
+        <td> Input size</td><td>{{len $t.Input}} </td>
+    </tr>
+    <tr>
+    <td> Input</td><td>{{$t.Input}}</td>
+    </tr>
+    <tr>
+    <td bgcolor="#FFFFFF" colspan="2">&nbsp;</td>
+    </tr>
+{{end}}
 </table>
 
 

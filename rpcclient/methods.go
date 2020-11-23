@@ -530,32 +530,54 @@ func (rpcClient *Client) TxPool(data *templates.RenderData, rq *http.Request) {
 	return
 }
 
-type pendingTxReq struct {
-	FilterOptions filterOptions
-}
-
-type filterOptions struct {
-	From EQField `json:"from"`
-}
-
-type EQField struct {
-	EQ string `json:"eq"`
+type filterParams struct {
+	From struct {
+		Eq string `json:"eq,omitempty"`
+	} `json:"from,omitempty"`
+	To struct {
+		Eq string `json:"eq,omitempty"`
+	} `json:"to,omitempty"`
+	Nonce struct {
+		Gt string `json:"gt,omitempty"`
+	} `json:"nonce,omitempty"`
 }
 
 func (rpcClient *Client) TxPoolTx(data *templates.RenderData, rq *http.Request) {
 	data.TemplateName = "txpoolTx"
-	txHash := rq.Form.Get("txHash")
-	calldat := rpcClient.NewCallData("txpool_besuPendingTransaction")
+
+	txFrom := rq.Form.Get("from")
+	if len(txFrom) != 42 && txFrom != "from" {
+		data.Error = fmt.Errorf("Invalid address for from")
+		return
+	}
+	txTo := rq.Form.Get("to")
+	if len(txTo) != 42 && txTo != "to" {
+		data.Error = fmt.Errorf("Invalid address for to")
+		return
+	}
+	txNonce := rq.Form.Get("nonce")
+
+	calldat := rpcClient.NewCallData("txpool_besuPendingTransactions")
 	calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
-	txPoolTx := new(TxPoolTransactionResult)
-	pendingTxReq := new(pendingTxReq)
-	pendingTxReq.FilterOptions.From.EQ = txHash
-	calldat.Command.Params = []interface{}{10000, pendingTxReq}
-	err := rpcClient.actualRpcCall(calldat, txPoolTx)
+	filterParams := new(filterParams)
+	if txFrom != "from" {
+		filterParams.From.Eq = txFrom
+	}
+	if txTo != "to" {
+		filterParams.To.Eq = txTo
+	}
+	if txNonce != "min nonce" {
+		filterParams.Nonce.Gt = txNonce
+	}
+	calldat.Command.Params = []interface{}{1000, filterParams}
+	var txPoolTxList []TxPoolTransactionResult
+	err := rpcClient.actualRpcCall(calldat, &txPoolTxList)
+	txpoolTransactionList := new(TxPoolTransactionList)
+	txpoolTransactionList.Transactions = txPoolTxList
 	if err != nil {
 		data.Error = err
 		return
 	}
-	data.BodyData = txPoolTx
+	data.BodyData = txpoolTransactionList
 	return
 }
