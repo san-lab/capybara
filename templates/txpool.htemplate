@@ -36,9 +36,16 @@
 
 <table>
 	<tr>
-		<td> Transactions</td><td> <table>{{range $i, $t := .Transactions}}<tr>
-                                                <td>{{$t.Hash}}{{end}}</td>
-                                                                    </tr>
+		<td> Transactions</td><td> <table>{{range $i, $t := .Transactions}}
+		        <tr>
+                    <td> Hash: </td><td>{{$t.Hash}}</td>
+                </tr>
+                <tr>
+                    <td> Added to pool at: </td><td>{{$t.AddedToPoolAt}}</td>
+                </tr>
+                <tr>
+                    <td bgcolor="#FFFFFF" colspan="2">&nbsp;{{end}}</td>
+                </tr>
 			</table>
 		</td>
 	</tr>
