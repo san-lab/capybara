@@ -21,6 +21,14 @@
 
 {{with .BodyData}}
 
+<form action="/txpool" method="get" >
+<table>
+    <tr>
+            <td><input type="submit" value="Return txPool" name="return_txpool" /> </td>
+    </tr>
+</table>
+</form>
+
 <form action="/txpoolTx" method="get" >
 <table>
     <tr>
@@ -35,40 +43,40 @@
 
 <table>
     <tr>
-    <td>Found Transactions:</td>
+        <td>Found Transactions:</td>
     </tr>
     {{range $i, $t := .Transactions}}
     <tr>
-    <td>Hash</td><td>{{$t.Hash}}</td>
+        <td bgcolor="#D3D3D3">Hash</td><td>{{$t.Hash}}</td>
     </tr>
 
     <tr>
-        <td> Gas</td><td>{{$t.Gas}}</td>
+        <td bgcolor="#D3D3D3"> Gas</td><td>{{$t.Gas}}</td>
     </tr>
     <tr>
-        <td> Nonce</td><td>{{$t.Nonce}}</td>
+        <td bgcolor="#D3D3D3"> Nonce</td><td>{{$t.Nonce}}</td>
     </tr>
     <tr>
-        <td>Value </td><td>{{$t.Value}}</td>
+        <td bgcolor="#D3D3D3">Value </td><td>{{$t.Value}}</td>
     </tr>
     <tr>
-        <td> To</td><td>{{$t.To}} </td>
+        <td bgcolor="#D3D3D3"> To</td><td>{{$t.To}} </td>
     </tr>
 
     <tr>
-    <td> From</td><td>{{$t.From}} </td>
+        <td bgcolor="#D3D3D3"> From</td><td>{{$t.From}} </td>
     </tr>
     <tr>
-        <td> Nonce</td><td>{{$t.Nonce}} </td>
+        <td bgcolor="#D3D3D3"> Nonce</td><td>{{$t.Nonce}} </td>
     </tr>
     <tr>
-        <td> Input size</td><td>{{len $t.Input}} </td>
+        <td bgcolor="#D3D3D3"> Input size</td><td>{{len $t.Input}} </td>
     </tr>
     <tr>
-    <td> Input</td><td>{{$t.Input}}</td>
+        <td bgcolor="#D3D3D3"> Input</td><td>{{$t.Input}}</td>
     </tr>
     <tr>
-    <td bgcolor="#FFFFFF" colspan="2">&nbsp;</td>
+        <td bgcolor="#FFFFFF" colspan="2">&nbsp;</td>
     </tr>
 {{end}}
 </table>

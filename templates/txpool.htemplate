@@ -38,10 +38,10 @@
 	<tr>
 		<td> Transactions</td><td> <table>{{range $i, $t := .Transactions}}
 		        <tr>
-                    <td> Hash: </td><td>{{$t.Hash}}</td>
+                    <td bgcolor="#D3D3D3"> Hash: </td><td>{{$t.Hash}}</td>
                 </tr>
                 <tr>
-                    <td> Added to pool at: </td><td>{{$t.AddedToPoolAt}}</td>
+                    <td bgcolor="#D3D3D3"> Added to pool at: </td><td>{{$t.AddedToPoolAt}}</td>
                 </tr>
                 <tr>
                     <td bgcolor="#FFFFFF" colspan="2">&nbsp;{{end}}</td>
