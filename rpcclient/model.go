@@ -24,9 +24,9 @@ type Node struct {
 
 	BlockNumber int64
 	LastSeen    time.Time
-	Txpool      []TxpoolResult
+	Txpool      []TxpoolTransaction
 	Syncing     bool
-	probed     bool
+	probed      bool
 }
 
 func (nt *Network) IsTrailing(nd *Node) bool {

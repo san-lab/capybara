@@ -1,0 +1,90 @@
+{{define "txpoolTx"}}
+{{template "header" .HeaderData}}
+
+<style type="text/css">
+#mynetwork {
+    width: 600px;
+    height: 400px;
+    border: 2px solid lightgray;
+}
+
+
+.red {
+    color: red;
+}
+
+</style>
+
+
+{{with .Error}}Error: {{.}}{{end}}
+
+
+{{with .BodyData}}
+
+<form action="/txpool" method="get" >
+<table>
+    <tr>
+            <td><input type="submit" value="Return txPool" name="return_txpool" /> </td>
+    </tr>
+</table>
+</form>
+
+<form action="/txpoolTx" method="get" >
+<table>
+    <tr>
+            <td><input type="text" value="from" name="from" /> </td>
+            <td><input type="text" value="to" name="to" /> </td>
+            <td><input type="text" value="min nonce" name="nonce" /> </td>
+            <td><input type="submit" value="Find TxPool" name="find_txPool" /> </td>
+
+    </tr>
+</table>
+</form>
+
+<table>
+    <tr>
+        <td>Found Transactions:</td>
+    </tr>
+    {{range $i, $t := .Transactions}}
+    <tr>
+        <td bgcolor="#D3D3D3">Hash</td><td>{{$t.Hash}}</td>
+    </tr>
+
+    <tr>
+        <td bgcolor="#D3D3D3"> Gas</td><td>{{$t.Gas}}</td>
+    </tr>
+    <tr>
+        <td bgcolor="#D3D3D3"> Nonce</td><td>{{$t.Nonce}}</td>
+    </tr>
+    <tr>
+        <td bgcolor="#D3D3D3">Value </td><td>{{$t.Value}}</td>
+    </tr>
+    <tr>
+        <td bgcolor="#D3D3D3"> To</td><td>{{$t.To}} </td>
+    </tr>
+
+    <tr>
+        <td bgcolor="#D3D3D3"> From</td><td>{{$t.From}} </td>
+    </tr>
+    <tr>
+        <td bgcolor="#D3D3D3"> Nonce</td><td>{{$t.Nonce}} </td>
+    </tr>
+    <tr>
+        <td bgcolor="#D3D3D3"> Input size</td><td>{{len $t.Input}} </td>
+    </tr>
+    <tr>
+        <td bgcolor="#D3D3D3"> Input</td><td>{{$t.Input}}</td>
+    </tr>
+    <tr>
+        <td bgcolor="#FFFFFF" colspan="2">&nbsp;</td>
+    </tr>
+{{end}}
+</table>
+
+
+
+{{end}}
+
+
+{{template "footer" .FooterData}}
+{{end}}

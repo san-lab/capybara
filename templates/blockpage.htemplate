@@ -31,6 +31,14 @@
         <td><input type="submit" value="prev" name="action" /> </td>
         <td><input type="submit" value="next" name="action" /> </td>
         <td><input type="submit" value="scan_forward" name="action" /> </td>
+
+    </tr>
+</table>
+</form>
+<form action="/transaction" method="get" >
+<table>
+    <tr>
+
         <td><input type="text" value="tx hash" name="tx_hash" /> </td>
         <td><input type="submit" value="find_tx" name="action" /> </td>
 
@@ -62,7 +70,7 @@
     {{$hnum:= .Number}}
 <td> Transactions</td><td> <table>{{range $i, $t := .Transactions}}<tr>
                                                 <td>{{$t.TransactionIndex}}</td>
-                                                <td><a href="/block?blockhex={{$hnum}}&txindex={{$i}}"> {{$t.Hash}} </a></td>
+                                                <td><a href="/transaction?blockhex={{$hnum}}&txindex={{$i}}"> {{$t.Hash}} </a></td>
                                                 <td> [{{len $t.Input}}] <br/>{{end}}</td></tr>  </table></td>
                                                                     </tr>
 

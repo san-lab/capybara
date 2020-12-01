@@ -50,6 +50,8 @@ const arg_refreshrate = "rate"
 const keyword_node = "node"
 const keyword_block = "block"
 const keyword_tx = "transaction"
+const keyword_txpool = "txpool"
+const keyword_txpoolTx = "txpoolTx"
 
 // Handles incoming requests. Some will be forwarded to the RPC client.
 // Assumes the request path has either: 1 part - interpreted as a /command with logic implemented within the client
@@ -82,6 +84,10 @@ func (lhh *LilHttpHandler) Handler(w http.ResponseWriter, r *http.Request) {
 			lhh.rpcClient.Transactions(&rdata, r)
 		case keyword_block:
 			lhh.rpcClient.BlockActions(&rdata, r)
+		case keyword_txpool:
+			lhh.rpcClient.TxPool(&rdata, r)
+		case keyword_txpoolTx:
+			lhh.rpcClient.TxPoolTx(&rdata, r)
 		case "printnetwork":
 			lhh.rpcClient.PrintModel(w)
 		case keyword_setrefresh:
