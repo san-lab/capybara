@@ -484,17 +484,8 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 			data.Error = err
 			return
 		}
-		th.Tx = *transaction
-		calldat = rpcClient.NewCallData("eth_getTransactionReceipt")
-		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
-		calldat.Command.Params = []interface{}{txHash}
-		trRec := new(TransactionReceipt)
-		err = rpcClient.actualRpcCall(calldat, trRec)
-		if err != nil {
-			data.Error = err
-			return
-		}
-		th.Tr = *trRec
+		th.Tx = transaction
+		th.GetReceipt(rpcClient)
 		data.BodyData = th
 		return
 	} else if len(blockhex) > 0 {
@@ -515,7 +506,10 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 		i, e := strconv.Atoi(txindex)
 		if e == nil {
 
-			data.BodyData = &TxH{Tx: block.Transactions[i]}
+			th := new(TxH)
+			th.Tx = &(block.Transactions[i])
+			th.GetReceipt(rpcClient)
+			data.BodyData = th
 
 			return
 		} else {

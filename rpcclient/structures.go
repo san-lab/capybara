@@ -108,8 +108,24 @@ type TransactionResult struct {
 }
 
 type TxH struct {
-	Tx TransactionResult
-	Tr TransactionReceipt
+	Tx *TransactionResult
+	Tr *TransactionReceipt
+}
+
+func (th *TxH) GetReceipt(rpcClient *Client) error {
+	if th.Tx != nil {
+		calldat := rpcClient.NewCallData("eth_getTransactionReceipt")
+		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
+		calldat.Command.Params = []interface{}{th.Tx.Hash}
+		trRec := new(TransactionReceipt)
+		err := rpcClient.actualRpcCall(calldat, trRec)
+		if err != nil {
+
+			return err
+		}
+		th.Tr = trRec
+	}
+	return nil
 }
 
 type TransactionReceipt struct {
