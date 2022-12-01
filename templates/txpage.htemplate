@@ -67,6 +67,9 @@
 <tr>
 <td> Input</td><td> <textarea rows="15" cols="120">{{.Input}}</textarea>  </td>
 </tr>
+<tr>
+<td> Receipt</td><td> <textarea rows="15" cols="120">{{.TxRec}}</textarea>  </td>
+</tr>
 
 </table>
 

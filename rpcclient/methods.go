@@ -9,10 +9,11 @@ import (
 	"time"
 
 	"encoding/json"
-	"github.com/san-lab/capybara/templates"
 	"io/ioutil"
 	"regexp"
 	"sort"
+
+	"github.com/san-lab/capybara/templates"
 )
 
 const keyword_action = "action"
@@ -483,6 +484,17 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 			return
 		}
 		data.BodyData = transaction
+		calldat = rpcClient.NewCallData("eth_getTransactionReceipt")
+		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
+		calldat.Command.Params = []interface{}{txHash}
+		trRec := new(TransactionReceipt)
+		err = rpcClient.actualRpcCall(calldat, trRec)
+		if err != nil {
+			data.Error = err
+			return
+		}
+		transaction.TxRec = *trRec
+
 		return
 	} else if len(blockhex) > 0 {
 		if len(blockhex) < 3 {
