@@ -514,7 +514,9 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 		txindex := rq.Form.Get("txindex")
 		i, e := strconv.Atoi(txindex)
 		if e == nil {
-			data.BodyData = block.Transactions[i]
+
+			data.BodyData = &TxH{Tx: block.Transactions[i]}
+
 			return
 		} else {
 			data.Error = fmt.Errorf("Wrong blockNumber and txIndex")
