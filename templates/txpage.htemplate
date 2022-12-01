@@ -41,7 +41,9 @@
 <tr>
     <td>BlockNumber</td><td><a href="/block?blockhex={{.BlockNumber}}">{{.BlockNumber}}</a> </td>
 </tr>
-
+<tr>
+    <td> Index</td><td>{{.TransactionIndex}}</td>
+</tr>
 <tr>
     <td> Gas</td><td>{{.Gas}}</td>
 </tr>
