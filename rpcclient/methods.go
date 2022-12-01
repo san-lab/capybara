@@ -493,7 +493,7 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 			data.Error = err
 			return
 		}
-		transaction.TxRec = *trRec
+		transaction.TxRec = trRec
 		data.BodyData = transaction
 		return
 	} else if len(blockhex) > 0 {
