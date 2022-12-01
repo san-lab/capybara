@@ -483,7 +483,7 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 			data.Error = err
 			return
 		}
-		data.BodyData = transaction
+
 		calldat = rpcClient.NewCallData("eth_getTransactionReceipt")
 		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
 		calldat.Command.Params = []interface{}{txHash}
@@ -494,7 +494,7 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 			return
 		}
 		transaction.TxRec = *trRec
-
+		data.BodyData = transaction
 		return
 	} else if len(blockhex) > 0 {
 		if len(blockhex) < 3 {
