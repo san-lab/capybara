@@ -54,6 +54,9 @@
     <td>Hash</td><td>{{.Hash}}</td>
 </tr>
 <tr>
+    <td>ParentHash</td><td>{{.ParentHash}}</td>
+</tr>
+<tr>
     <td> Timestamp</td><td>{{.Timestamp}}</td>
 </tr>
 <tr>
