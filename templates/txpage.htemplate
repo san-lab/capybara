@@ -20,7 +20,7 @@
 
 
 {{with .BodyData}}
-
+{{with .Tx}}
 <form action="/transaction" method="get" >
 <table>
     <tr>
@@ -67,10 +67,12 @@
 <tr>
 <td> Input</td><td> <textarea rows="15" cols="120">{{.Input}}</textarea>  </td>
 </tr>
+{{end}}
+{{with .Tr}}
 <tr>
-<td> Bloom</td><td> <textarea rows="15" cols="120">{{.TxRec.LogsBloom}}</textarea>  </td>
+<td> Bloom</td><td> <textarea rows="15" cols="120">{{.}}</textarea>  </td>
 </tr>
-
+{{end}}
 </table>
 
 
