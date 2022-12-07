@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	"bytes"
+	"strconv"
+
+	"github.com/san-lab/capybara/proofs"
 	"github.com/san-lab/capybara/rpcclient"
 	"github.com/san-lab/capybara/templates"
-	"strconv"
 )
 
 const passwdFile = "http.passwd.json"
@@ -52,6 +54,7 @@ const keyword_block = "block"
 const keyword_tx = "transaction"
 const keyword_txpool = "txpool"
 const keyword_txpoolTx = "txpoolTx"
+const keyword_ionProof = "ionproof"
 
 // Handles incoming requests. Some will be forwarded to the RPC client.
 // Assumes the request path has either: 1 part - interpreted as a /command with logic implemented within the client
@@ -117,7 +120,9 @@ func (lhh *LilHttpHandler) Handler(w http.ResponseWriter, r *http.Request) {
 		case "nodestable":
 			fmt.Fprintln(w, lhh.GetNodesTable())
 			return
-
+		case keyword_ionProof:
+			proofs.IonProof(&rdata, r, w, lhh.rpcClient.DefaultRPCEndpoint)
+			return
 		default:
 
 			rdata.HeaderData.SetRefresh(5)

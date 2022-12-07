@@ -467,6 +467,7 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 	var err error
 
 	action := rq.Form.Get(keyword_action)
+	ionproof := rq.FormValue("ionproof")
 	blockhex := rq.Form.Get("blockhex")
 	if action == "find_tx" {
 		txHash := rq.Form.Get("tx_hash")
@@ -486,6 +487,9 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 		}
 		th.Tx = transaction
 		th.GetReceipt(rpcClient)
+		if ionproof == "on" {
+			th.GetProof(rpcClient)
+		}
 		data.BodyData = th
 		return
 	} else if len(blockhex) > 0 {

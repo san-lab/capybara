@@ -29,6 +29,7 @@
         <td><input type="submit" value="next" name="action" /> </td>
         <td><input type="text" value="{{.Hash}}" name="tx_hash" /> </td>
         <td><input type="submit" value="find_tx" name="action" /> </td>
+        <td>ion proof:<input type="checkbox"  name="ionproof" /> </td>
 
     </tr>
 </table>
@@ -73,6 +74,11 @@
 {{with .Tr}}
 <tr>
 <td> Receipt</td><td> <textarea rows="15" cols="120">{{.}}</textarea>  </td>
+</tr>
+{{end}}
+{{with .Pr}}
+<tr>
+<td> Proof</td><td> <textarea rows="15" cols="120">{{.}}</textarea>  </td>
 </tr>
 {{end}}
 </table>
