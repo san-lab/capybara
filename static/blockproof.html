@@ -6,11 +6,12 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
 </head>
 <body>
+	<h2>Chain: <span id='chainid'></span></h2>
     <h2>Accounts:</h2>
     <ul id="showAccounts"></ul>
-<form action="/submitsubstrate" >
+<form action="/submitsubstrate" method="POST">
 	<div ><textarea  id="blockdiv" rows="20" cols="300" name="Substrate"></textarea></div>
-	<input type="text" id='hashfield' value="0xe40eeb653a492cc62c213c72c60890a425bdb46d6043689f226d772fe8b33aa4" name="txhash">
+	<input type="text" id='hashfield' value="0xe40eeb653a492cc62c213c72c60890a425bdb46d6043689f226d772fe8b33aa4" name="txhash" class="form-control col-7">
 	<button id="my-button" class="btn btn-primary" onclick="getBlockByTxHash()" type="button">Get Rx Proof Substrate</button>
 	<button id="submit" class="btn btn-primary" type="submit">Submit Substrate</button>
 </form>
@@ -43,21 +44,27 @@ var counter = 0;
 		try { 
 			const txj = await getTxJson(txh);
 		} catch (error) {
-			document.getElementById('blockdiv').innerHTML=('No Block for hash: '+ txh);
+			document.getElementById('blockdiv').innerHTML=('Error retrieving transaction: '+ txh);
 			return;
 		}
 		substrate["tx"]=txj;
 		console.log(txj);
-		const block = await getBlockJson(txj.blockNumber);
+		try {
+			const block = await getBlockJson(txj.blockNumber);
+			substrate["block"] = block;
+		} catch (error) {
+			document.getElementById('blockdiv').innerHTML=('No Block for hash: '+ txh);
+			return;
+		}
+		
 		let bld = document.getElementById('blockdiv');
 		//bld.innerHTML = JSON.stringify(block);
-		substrate["block"] = block;
+		
 		substrate["rcps"] = [];
 		console.log("s1:",substrate);
-		for (i=0; i< block.transactions.length; i++) {
-			console.log(block.transactions[i].hash);
-			const rcp = await ethereum.request( {method: 'eth_getTransactionReceipt', params: [block.transactions[i].hash]});
-			substrate["rcps"].push(rcp);
+		for (i=0; i< substrate.block.transactions.length; i++) {
+			const rcp = await ethereum.request( {method: 'eth_getTransactionReceipt', params: [substrate.block.transactions[i].hash]});
+			substrate.rcps.push(rcp);
 		};
 		console.log("s:",substrate);
 		bld.innerHTML = JSON.stringify(substrate);
@@ -76,14 +83,23 @@ var counter = 0;
 
     
     <script>
-      var accounts;
+   
     async function getAccounts() {
       // Request the user's accounts from the Ethereum provider
-      accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+		const chainid = await ethereum.request({ method: 'eth_chainId' });
     
+		document.getElementById('chainid').innerText=parseInt(chainid, 16);
       // Get the element to display the accounts in
       const showAccounts = document.getElementById('showAccounts');
-    
+      const children = showAccounts.children;
+
+// Loop through the child elements and remove them from the DOM
+while (children.length > 0) {
+  showAccounts.removeChild(children[0]);
+}
+
+
       // Loop through the accounts and add each one to the list
       for (const account of accounts) {
         const li = document.createElement('li');
@@ -94,6 +110,16 @@ var counter = 0;
     
     // Call the getAccounts function to retrieve and display the user's accounts
     getAccounts();
+
+	// Get the current provider
+window.ethereum.on('accountsChanged', function (accounts) {
+  getAccounts();
+});
+
+window.ethereum.on('networkChanged', function (networkId) {
+  getAccounts();
+});
+
     </script>
 
 
