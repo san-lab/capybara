@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Get Proof Substrates</title>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/web3@0.19.0/dist/web3.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+</head>
+<body>
+    <h2>Accounts:</h2>
+    <ul id="showAccounts"></ul>
+<form action="/submitsubstrate" >
+	<div ><textarea  id="blockdiv" rows="20" cols="300" name="Substrate"></textarea></div>
+	<input type="text" id='hashfield' value="0xe40eeb653a492cc62c213c72c60890a425bdb46d6043689f226d772fe8b33aa4" name="txhash">
+	<button id="my-button" class="btn btn-primary" onclick="getBlockByTxHash()" type="button">Get Rx Proof Substrate</button>
+	<button id="submit" class="btn btn-primary" type="submit">Submit Substrate</button>
+</form>
+	<script>
+// Get a reference to the button
+
+  async function getTxJson (txh) {
+	 txj = await ethereum.request({ method: 'eth_getTransactionByHash', params: [txh] });
+	 //txjp = JSON.parse(txj);
+	 return txj;
+  }
+
+  async function getBlockJson(blockNum) {
+	console.log(blockNum)
+	blk = await ethereum.request({ method: 'eth_getBlockByNumber', params: [blockNum, true] });
+	//blkj = JSON.parse(blk);
+	return blk;
+  }
+var counter = 0;
+	async function getBlockByTxHash() {
+		var substrate = {};
+		
+		console.log('invoked!', counter);
+		counter++;
+	
+		document.getElementById('blockdiv').innerHTML='';
+		
+		const txh = document.getElementById('hashfield').value;
+		console.log("hash: ",txh);
+		try { 
+			const txj = await getTxJson(txh);
+		} catch (error) {
+			document.getElementById('blockdiv').innerHTML=('No Block for hash: '+ txh);
+			return;
+		}
+		substrate["tx"]=txj;
+		console.log(txj);
+		const block = await getBlockJson(txj.blockNumber);
+		let bld = document.getElementById('blockdiv');
+		//bld.innerHTML = JSON.stringify(block);
+		substrate["block"] = block;
+		substrate["rcps"] = [];
+		console.log("s1:",substrate);
+		for (i=0; i< block.transactions.length; i++) {
+			console.log(block.transactions[i].hash);
+			const rcp = await ethereum.request( {method: 'eth_getTransactionReceipt', params: [block.transactions[i].hash]});
+			substrate["rcps"].push(rcp);
+		};
+		console.log("s:",substrate);
+		bld.innerHTML = JSON.stringify(substrate);
+		
+  	}
+
+	  
+
+	  function printCount() {
+		console.log(counter);
+	  }
+
+	
+	</script>
+	
+
+    
+    <script>
+      var accounts;
+    async function getAccounts() {
+      // Request the user's accounts from the Ethereum provider
+      accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+    
+      // Get the element to display the accounts in
+      const showAccounts = document.getElementById('showAccounts');
+    
+      // Loop through the accounts and add each one to the list
+      for (const account of accounts) {
+        const li = document.createElement('li');
+        li.innerHTML = "account: " + account;
+        showAccounts.appendChild(li);
+      }
+    }
+    
+    // Call the getAccounts function to retrieve and display the user's accounts
+    getAccounts();
+    </script>
+
+
+    
+</body>
+</html>

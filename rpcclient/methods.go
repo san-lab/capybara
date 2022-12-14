@@ -488,7 +488,7 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 		th.Tx = transaction
 		th.GetReceipt(rpcClient)
 		if ionproof == "on" {
-			th.GetProof(rpcClient)
+			GetProof(rpcClient, th)
 		}
 		data.BodyData = th
 		return

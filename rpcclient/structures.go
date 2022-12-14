@@ -1,12 +1,9 @@
 package rpcclient
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"strconv"
 	"time"
-
-	"github.com/san-lab/capybara/proofs"
 )
 
 type EthResponse struct {
@@ -128,21 +125,6 @@ func (th *TxH) GetReceipt(rpcClient *Client) error {
 			return err
 		}
 		th.Tr = trRec
-	}
-	return nil
-}
-
-func (th *TxH) GetProof(rpcClient *Client) error {
-	if th.Tx != nil {
-		var err error
-
-		b, err := proofs.GetIonProof(rpcClient.DefaultRPCEndpoint, th.Tx.Hash)
-		if err != nil {
-
-			return err
-		}
-		th.Pr = hex.EncodeToString(b)
-
 	}
 	return nil
 }

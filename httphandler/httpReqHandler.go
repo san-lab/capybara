@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"strconv"
 
-	"github.com/san-lab/capybara/proofs"
 	"github.com/san-lab/capybara/rpcclient"
 	"github.com/san-lab/capybara/templates"
 )
@@ -72,6 +71,10 @@ func (lhh *LilHttpHandler) Handler(w http.ResponseWriter, r *http.Request) {
 
 	if len(f) > 0 { // Some URI path provided
 		switch f[0] {
+		case "webstore":
+			rpcclient.Webstore(&rdata, r)
+		case "submitsubstrate":
+			rpcclient.SubmitSubstrate(&rdata, r)
 		case keyword_templates:
 			lhh.renderer.LoadTemplates()
 
@@ -121,7 +124,7 @@ func (lhh *LilHttpHandler) Handler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(w, lhh.GetNodesTable())
 			return
 		case keyword_ionProof:
-			proofs.IonProof(&rdata, r, w, lhh.rpcClient.DefaultRPCEndpoint)
+			lhh.rpcClient.IonProof(&rdata, r, w)
 			return
 		default:
 

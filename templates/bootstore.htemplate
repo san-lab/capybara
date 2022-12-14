@@ -1,0 +1,105 @@
+{{define "bootstore"}}
+{{template "bootstrapheader" .HeaderData}}
+<script>
+var Offer = new Object();
+</script>
+    <div class="container">
+      <h1>Welcome to our webstore!</h1>
+      <h2>Here are some of our featured products:</h2>
+      {{range $pr := .BodyData}}
+         <script>
+          Offer[{{$pr.Id}}] = {{$pr.Name}};
+        </script>
+      <div class="row">
+        <div class="col-md-6 product-item">
+          <div class="product-image" style="float: left; width: 140px; height: 160px; margin-right: 20px;"><img src={{$pr.Image}}  width="140" height="160"/></div>
+          <h3>{{$pr.Name}} ({{$pr.Price}} OKP)</h3>
+          <p>{{$pr.Description}}</p>
+          <button class="btn btn-primary" onclick="addToCart('{{$pr.Id}}', {{$pr.Price}})">Add to cart</button>
+        </div>
+      {{end}}
+      <div class="container">
+      <h2>Shopping Cart</h2>
+      <ul id="shopping-cart">
+        <!-- Shopping cart items will be added here -->
+      </ul>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="checkout-button">Checkout with MetaMask</button>
+    
+
+    
+   <script>
+
+document.getElementById('checkout-button').addEventListener('click', function() {
+  window.ethereum.enable();
+});
+
+
+  let shoppingCart = {};
+
+  function updateCart() {
+    let cartList = document.getElementById('shopping-cart');
+    cartList.innerHTML = '';
+    let table = document.createElement('table');
+    table.style.border = 'none';
+    let total = 0;
+    for (let item in shoppingCart) {
+      let itemCount = shoppingCart[item];
+      let price = prices[item];
+      total += itemCount * price;
+      let row = table.insertRow();
+      let itemCell = row.insertCell();
+      itemCell.innerText = Offer[item];
+      itemCell.style.width = '32ch';
+      let countCell = row.insertCell();
+      countCell.innerText = `count: ${itemCount}`;
+      let priceCell = row.insertCell();
+      priceCell.style.padding = '10px';
+      priceCell.innerText = price.toFixed(3);
+      let buttonsCell = row.insertCell();
+      buttonsCell.innerHTML = `
+        <button class="btn btn-secondary" onclick="increaseCount('${item}')">+</button>
+        <button class="btn btn-secondary" onclick="decreaseCount('${item}')">-</button>`;
+    }
+    let totalRow = table.insertRow();
+    let totalLabelCell = totalRow.insertCell();
+    totalLabelCell.innerText = 'Total:';
+    totalLabelCell.style.fontWeight = 'bold';
+    totalLabelCell.colSpan = 2;
+    let totalPriceCell = totalRow.insertCell();
+    totalPriceCell.innerText = total.toFixed(3);
+    totalPriceCell.style.fontWeight = 'bold';
+    cartList.appendChild(table);
+  }
+
+var prices = new Object();
+  function addToCart(item, price) {
+  if (!shoppingCart[item]) {
+    shoppingCart[item] = 1;
+  } else {
+    shoppingCart[item]++;
+  }
+  prices[item]=price;
+  updateCart();
+}
+
+function increaseCount(item) {
+  shoppingCart[item]++;
+  updateCart();
+}
+
+function decreaseCount(item) {
+  if (shoppingCart[item] && shoppingCart[item] > 0) {
+    shoppingCart[item]--;
+  }
+  updateCart();
+}
+
+      </script>
+      
+      
+      
+</body>      
+{{template "footer" .FooterData}}
+{{end}}

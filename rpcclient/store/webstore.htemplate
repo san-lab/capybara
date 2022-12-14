@@ -1,0 +1,67 @@
+<body>
+  ...
+  <div id="root"></div>
+  ...
+  <script>
+    import React, { useState } from 'react';
+
+function WebstorePage() {
+  const [shoppingCart, setShoppingCart] = useState([]);
+  const [status, setStatus] = useState('');
+
+  const addToCart = (item) => {
+    setShoppingCart([...shoppingCart, item]);
+    setStatus(`${shoppingCart.length} items in cart`);
+  };
+
+  const removeFromCart = (item) => {
+    setShoppingCart(shoppingCart.filter((i) => i !== item));
+    setStatus(`${shoppingCart.length} items in cart`);
+  };
+
+  return (
+    <div>
+      <h1>Welcome to our webstore!</h1>
+      <h2>Here are some of our featured products:</h2>
+      <ul>
+        <li>
+          <h3>Lava Lamps</h3>
+          <p>Add a touch of retro cool to any room with our colorful lava lamps. Each lamp is handmade and unique, with a mesmerizing flowing liquid design that is sure to impress.</p>
+          <button onClick={() => addToCart('Lava Lamp')}>Add to cart</button>
+          <button onClick={() => removeFromCart('Lava Lamp')}>Remove from cart</button>
+        </li>
+        <li>
+          <h3>Stick Insect Food</h3>
+          <p>Keep your stick insects well-fed and healthy with our specially-formulated stick insect food. Made from a blend of high-quality ingredients, this food is perfect for maintaining your stick insects' diet.</p>
+          <button onClick={() => addToCart('Stick Insect Food')}>Add to cart</button>
+          <button onClick={() => removeFromCart('Stick Insect Food')}>Remove from cart</button>
+        </li>
+        <li>
+          <h3>Pre-Peeled Bananas</h3>
+          <p>Save time and effort with our convenient pre-peeled bananas. No more struggling to remove the skin - just open the packaging and enjoy the delicious, ripe fruit inside.</p>
+          <button onClick={() => addToCart('Pre-Peeled Bananas')}>Add to cart</button>
+          <button onClick={() => removeFromCart('Pre-Peeled Bananas')}>Remove from cart</button>
+        </li>
+        <li>
+          <h3>Bluetooth Forks</h3>
+          <p>Eat smarter and more conveniently with our Bluetooth forks. Connect to your smartphone and track your food intake, set portion control reminders, and more.</p>
+          <button onClick={() => addToCart('Bluetooth Fork')}>Add to cart</button>
+          <button onClick={() => removeFromCart('Bluetooth Fork')}>Remove from cart</button>
+
+        </li>
+      </ul>
+      <h2>Shopping Cart</h2>
+      <ul>
+        {shoppingCart.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default WebstorePage;
+    ReactDOM.render(<WebstorePage />, document.getElementById('root'));
+  </script>
+</body>
+

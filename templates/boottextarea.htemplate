@@ -1,0 +1,9 @@
+{{define "boottextarea"}}
+{{template "bootstrapheader" .HeaderData}}
+<textarea rows=80 cols=300>{{.BodyData}}</textarea>
+      
+      
+      
+</body>      
+{{template "footer" .FooterData}}
+{{end}}
