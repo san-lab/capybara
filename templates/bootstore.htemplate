@@ -1,10 +1,33 @@
 {{define "bootstore"}}
 {{template "bootstrapheader" .HeaderData}}
+
+<script src="https://unpkg.com/@metamask/detect-provider/dist/detect-provider.min.js"></script>
+
 <script>
 var Offer = new Object();
 </script>
+
     <div class="container">
-      <h1>Welcome to our webstore!</h1>
+      <div class="container">
+          <div class="row">
+            <div class="col">
+              <h1>Welcome to our webstore!</h1>
+            </div>
+            <div class="col">
+                <div class="container">
+                  <div class="row">
+                    <div class="col">
+                         This store is connected to chain <span id='chainid'>not set</span> 
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col">
+                      Selected account <span id='account'>not set</span> 
+                    </div>
+                  </div>
+            </div>
+          </div>
+        </div>
       <h2>Here are some of our featured products:</h2>
       {{range $pr := .BodyData}}
          <script>
@@ -25,25 +48,47 @@ var Offer = new Object();
       </ul>
       </div>
     </div>
-    <button class="btn btn-primary" id="checkout-button">Checkout with MetaMask</button>
+    <button class="btn btn-primary" id="checkout-button" onClick="callCheckout()">Checkout with MetaMask</button>
+    
     
 
     
    <script>
 
-document.getElementById('checkout-button').addEventListener('click', function() {
-  window.ethereum.enable();
+async function getAccounts() {
+      // Request the user's accounts from the Ethereum provider
+    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+		const chainid = await ethereum.request({ method: 'eth_chainId' });
+    
+		document.getElementById('chainid').innerText=parseInt(chainid, 16);
+      // Get the element to display the accounts in
+    document.getElementById('account').innerText=accounts[0];
+
+      
+    }
+    
+    // Call the getAccounts function to retrieve and display the user's accounts
+    getAccounts();
+
+	// Get the current provider
+window.ethereum.on('accountsChanged', function (accounts) {
+  getAccounts();
+});
+
+window.ethereum.on('networkChanged', function (networkId) {
+  getAccounts();
 });
 
 
   let shoppingCart = {};
+  let total;
 
   function updateCart() {
     let cartList = document.getElementById('shopping-cart');
     cartList.innerHTML = '';
     let table = document.createElement('table');
     table.style.border = 'none';
-    let total = 0;
+    total = 0;
     for (let item in shoppingCart) {
       let itemCount = shoppingCart[item];
       let price = prices[item];
@@ -95,6 +140,148 @@ function decreaseCount(item) {
   }
   updateCart();
 }
+
+
+var abi = JSON.parse(`[
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "shop",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "Procurement",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint8[]",
+				"name": "items",
+				"type": "uint8[]"
+			},
+			{
+				"internalType": "uint8[]",
+				"name": "counts",
+				"type": "uint8[]"
+			}
+		],
+		"name": "Sell",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function",
+    "payable": true
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address payable",
+				"name": "_to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_amount",
+				"type": "uint256"
+			}
+		],
+		"name": "transfer",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getOwner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "customer",
+				"type": "address"
+			},
+			{
+				"internalType": "uint8",
+				"name": "prodId",
+				"type": "uint8"
+			}
+		],
+		"name": "getPossessions",
+		"outputs": [
+			{
+				"internalType": "uint8",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]`);
+
+var contract;
+var conInst;
+var accounts;
+var resp;
+let value;
+const deployedAt = "0xB1cFD488f72b08BF127cC9AF073C3f88cC56D53B";
+async function callCheckout() {
+  const prov = await detectEthereumProvider();
+  const web3 = new Web3(prov);
+  accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+
+  web3.eth.defaultAccount = accounts[0];
+  contract = web3.eth.contract(abi);
+  conInst = contract.at(deployedAt);
+  console.log(accounts);
+  //conInst.getPossessions.call(accounts[0], 1, function(e,re){resp=re;}); 
+  let items = [];
+  let counts = [];
+  for (it in shoppingCart) {
+    items.push(it);
+    counts.push(shoppingCart[it]);
+  }
+  value = '0x'+(total*1000000000000000000).toString(16);
+  conInst.Sell(items, counts,
+    {
+      value: value,
+    }, 
+  console.log
+  ) 
+    
+}
+
+
 
       </script>
       
