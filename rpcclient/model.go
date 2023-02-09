@@ -27,6 +27,7 @@ type Node struct {
 	Txpool      []TxpoolTransaction
 	Syncing     bool
 	probed      bool
+	Client      string
 }
 
 func (nt *Network) IsTrailing(nd *Node) bool {
@@ -54,6 +55,9 @@ type NodeID string
 
 func (nid *NodeID) Short() string {
 	s := string(*nid)
+	if len(s) == 0 {
+		return "unknown"
+	}
 	return s[:8] + "..." + s[len(s)-8:]
 }
 

@@ -112,31 +112,42 @@ func (rpcClient *Client) Initialize() error {
 	return nil
 }
 
+var besu = regexp.MustCompile("besu")
+var edge = regexp.MustCompile("edge")
+
 func (rpcClient *Client) buildNode(rpcendpoint string) (*Node, error) {
 	version, err := rpcClient.getClientVersion(rpcendpoint)
 	if err != nil {
 		return nil, err
 	}
-	v := strings.Split(*version, "/")[0]
-	switch v {
-	case "besu":
+
+	node := new(Node)
+	if len(besu.FindString(*version)) > 0 {
 		ni, err := rpcClient.GetNodeInfo(rpcendpoint)
 		if err != nil {
 			return nil, err
 		}
-		node := new(Node)
+
 		tokens := strings.Split(rpcendpoint, ":")
 		node.RPCPort, _ = strconv.Atoi(tokens[1])
 		node.RPCURLs = map[string]bool{tokens[0]: true}
 		FillNodeFromNodeInfo(node, ni)
 		node.IsReachable = true
 		node.LastSeen = time.Now()
+		node.Client = "besu"
 		return node, nil
-
-	default:
-		return nil, fmt.Errorf("Not supported client:", v)
 	}
-	return nil, fmt.Errorf("You have reached unreachable code")
+
+	if len(edge.FindString(*version)) > 0 {
+		node.Client = "edge"
+		node.IsReachable = true
+		node.RPCURLs = map[string]bool{rpcendpoint: true}
+		node.RPCPort = 443
+		return node, nil
+	}
+
+	return nil, fmt.Errorf("Not supported client: %v", *version)
+
 }
 
 func (rpcClient *Client) getClientVersion(rpcendpoint string) (*string, error) {
@@ -275,21 +286,7 @@ func (rpcClient *Client) probe(nd *Node) {
 }
 
 func (rpcClient *Client) probeReachableNode(nd *Node) {
-	//Look if any new node in peers
-	err := rpcClient.findPeersOf(nd)
-	if err != nil {
-		log.Println("Error on probing", nd.ID.Short(), err)
-		nd.IsReachable = false
-		nd.Peers = map[NodeID]Peer{}
-		return
-	}
-	for id, p := range nd.Peers {
-		ip := strings.Split(p.PInfo.Network.RemoteAddress, ":")[0]
-		if rpcClient.addNode(NewUreachableNode(id, ip, nd.RPCPort)) {
-			log.Println("New Node found:", id)
-		}
-	}
-	err = rpcClient.findBlockNoOf(nd)
+	err := rpcClient.findBlockNoOf(nd)
 	if err != nil {
 		log.Println("Error on probing", nd.ID.Short(), err)
 	}
@@ -302,10 +299,37 @@ func (rpcClient *Client) probeReachableNode(nd *Node) {
 		fmt.Println(err)
 	}
 
+	//Look if any new node in peers
+	err = rpcClient.findPeersOf(nd)
+	if err != nil {
+		log.Println("Error on probing", nd.ID.Short(), err)
+		nd.IsReachable = false
+		nd.Peers = map[NodeID]Peer{}
+		return
+	}
+	for id, p := range nd.Peers {
+		ip := strings.Split(p.PInfo.Network.RemoteAddress, ":")[0]
+		if rpcClient.addNode(NewUreachableNode(id, ip, nd.RPCPort)) {
+			log.Println("New Node found:", id)
+		}
+	}
+
 }
 
 func (rpcClient *Client) TxPoolOf(nd *Node) error {
-	data := rpcClient.NewCallData("txpool_besuTransactions")
+	var method string
+	//TODO finalize client names
+	switch nd.Client {
+	case "besu":
+		method = "txpool_besuTransactions"
+	case "edge":
+		method = "txpool_content"
+	default:
+
+		return fmt.Errorf("unsupported client")
+	}
+
+	data := rpcClient.NewCallData(method)
 	data.Context.TargetRPCEndpoint = nd.PrefRPCURL + ":" + strconv.Itoa(nd.RPCPort)
 	txp := new([]TxpoolTransaction)
 	err := rpcClient.actualRpcCall(data, txp)

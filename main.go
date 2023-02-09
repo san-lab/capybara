@@ -20,6 +20,7 @@ func main() {
 	c := httphandler.Config{}
 
 	rpc := flag.String("ethRPCAddress", "localhost:8545", "default RPC access point")
+	tls := flag.Bool("tls", false, "https endpoint")
 	httpPort := flag.String("httpPort", "8100", "http port")
 	//c.MockMode = *flag.Bool("mockMode", false, "should mock http RPC client")
 	dbugmode := flag.Bool("debugMode", false, "debug output?")
@@ -33,6 +34,7 @@ func main() {
 	c.DebugMode = *dbugmode
 	c.RPCFirstEntry = *rpc
 	c.BasicAuth = *wauth
+	c.RPCTLS = *tls
 
 	//c.StartWatchdog = *startWatchdog
 	fmt.Println("Flags parsed. Starting the http server at", *httpPort)

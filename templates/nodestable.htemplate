@@ -2,7 +2,7 @@
 {{define "nodestable"}}
 <table border="1">
     <tr>
-        <th>IP</th><th>RPCPORT</th><th>Node ID</th><th>Reachable</th><th>Block No</th><th>Last Seen</th><th>TxPool</th>
+        <th>IP</th><th>RPCPORT</th><th>Node ID</th><th>Reachable</th><th>Block No</th><th>Last Seen</th><th>Client</th><th>TxPool</th>
     </tr>
 
     {{range $id, $node := .Nodes}}
@@ -13,6 +13,7 @@
     <td>{{$node.IsReachable}}</td>
     <td><a href="/block?blocknum={{$node.BlockNumber}}" target="_blank">{{$node.BlockNumber}} </a> </td>
     <td>{{$node.FormattedLastSeen}}</td>
+    <td>{{$node.Client}}</td>
     <td><a href="/txpool">View txpool</a> </td>
     </tr>
 

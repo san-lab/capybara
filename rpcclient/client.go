@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -21,6 +22,7 @@ import (
 //The field Port - to memorize the default Port (a bit of a stretch)
 type Client struct {
 	DefaultRPCEndpoint string // host:port
+	DefRPCTLS          bool
 	UserAgent          string
 	httpClient         HttpClient
 	seq                uint
@@ -29,7 +31,7 @@ type Client struct {
 	DebugMode bool
 	//UnreachableAddresses map[string]MyTime
 	MockMode         bool
-	dumpRPC          bool
+	DumpRPC          bool
 	blockedAddresses map[string]bool
 	Model            *Network
 	runContext       context.Context
@@ -42,16 +44,25 @@ type HttpClient interface {
 
 const defaultTimeout = 3 * time.Second
 
+type ClientConfig struct {
+	MockMode bool
+	DumpRPC  bool
+	URL      string
+	TLS      bool
+}
+
 //Creates a new rest api client
 //If something like ("www.node:8666",8545) is passed, an error is thrown
-func NewClient(ethHost string, mock bool, dump bool, ctx context.Context) (c *Client, err error) {
+func NewClient(cc ClientConfig, ctx context.Context) (c *Client, err error) {
 	c = &Client{}
-	c.MockMode = mock
-	c.dumpRPC = dump
+	c.MockMode = cc.MockMode
+	c.DumpRPC = cc.DumpRPC
+	c.DefaultRPCEndpoint = cc.URL
+	c.DefRPCTLS = cc.TLS
+
 	c.httpClient = http.DefaultClient
 	c.httpClient.(*http.Client).Timeout = defaultTimeout
 
-	c.DefaultRPCEndpoint = ethHost
 	c.seq = 0
 	//TODO handle error
 	c.LocalInfo, _ = GetLocalInfo()
@@ -118,6 +129,10 @@ func (rpcClient *Client) nextID() (id uint) {
 	return
 }
 
+var hasHttpPrefix = regexp.MustCompile(`^https?:\/\/`)
+var tlsPrefix = `https://`
+var plainPrefix = `http://`
+
 //Generic call to the ethereum api's.
 func (rpcClient *Client) actualRpcCall(data *CallData, result interface{}) error {
 	if rpcClient.blockedAddresses[data.Context.TargetRPCEndpoint] {
@@ -128,8 +143,16 @@ func (rpcClient *Client) actualRpcCall(data *CallData, result interface{}) error
 	if rpcClient.DebugMode {
 		log.Println(string(jcom))
 	}
+	var host = data.Context.TargetRPCEndpoint
+	p := hasHttpPrefix.Find([]byte(host))
 
-	host := "http://" + data.Context.TargetRPCEndpoint
+	if len(p) == 0 {
+		if rpcClient.DefRPCTLS {
+			host = tlsPrefix + host
+		} else {
+			host = plainPrefix + host
+		}
+	}
 
 	req, err := http.NewRequest("POST", host, bytes.NewReader(jcom))
 	if err != nil {
@@ -160,7 +183,7 @@ func (rpcClient *Client) actualRpcCall(data *CallData, result interface{}) error
 		return err
 	}
 
-	if rpcClient.dumpRPC {
+	if rpcClient.DumpRPC {
 		key, _, _ := net.SplitHostPort(req.URL.Host)
 		key = key + "_" + data.Command.Method + ".json"
 		log.Println("dumping " + key)
@@ -184,7 +207,7 @@ func (rpcClient *Client) actualRpcCall(data *CallData, result interface{}) error
 		return err
 	}
 	if data.Response.Error != nil {
-		err = fmt.Errorf("RPC Error: ", data.Response.Error.Code, data.Response.Error.Message)
+		err = fmt.Errorf("RPC Error: %v, %s", data.Response.Error.Code, data.Response.Error.Message)
 		return err
 	}
 

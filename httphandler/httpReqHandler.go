@@ -32,9 +32,9 @@ func NewHttpHandler(c Config, ctx context.Context) (lhh *LilHttpHandler, err err
 	lhh.config = c
 	lhh.runContext = ctx
 	lhh.renderer = templates.NewRenderer()
+	cc := rpcclient.ClientConfig{c.MockMode, c.DumpRPC, c.RPCFirstEntry, c.RPCTLS}
 
-	lhh.rpcClient, err = rpcclient.NewClient(c.RPCFirstEntry, c.MockMode, c.DumpRPC, ctx)
-	lhh.rpcClient.DebugMode = c.DebugMode
+	lhh.rpcClient, err = rpcclient.NewClient(cc, ctx)
 
 	if c.BasicAuth {
 		lhh.initPasswords(ctx)
@@ -150,6 +150,7 @@ func (lhh *LilHttpHandler) GetHandler(withAuth bool) handler {
 
 type Config struct {
 	RPCFirstEntry string
+	RPCTLS        bool
 	MockMode      bool
 	DumpRPC       bool
 	StartWatchdog bool
