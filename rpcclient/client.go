@@ -134,7 +134,7 @@ var tlsPrefix = `https://`
 var plainPrefix = `http://`
 
 //Generic call to the ethereum api's.
-func (rpcClient *Client) actualRpcCall(data *CallData, result interface{}) error {
+func (rpcClient *Client) ActualRpcCall(data *CallData, result interface{}) error {
 	if rpcClient.blockedAddresses[data.Context.TargetRPCEndpoint] {
 		return errors.New("Blocked address:" + data.Context.TargetRPCEndpoint)
 	}

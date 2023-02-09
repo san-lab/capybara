@@ -119,7 +119,7 @@ func (th *TxH) GetReceipt(rpcClient *Client) error {
 		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
 		calldat.Command.Params = []interface{}{th.Tx.Hash}
 		trRec := new(TransactionReceipt)
-		err := rpcClient.actualRpcCall(calldat, trRec)
+		err := rpcClient.ActualRpcCall(calldat, trRec)
 		if err != nil {
 
 			return err

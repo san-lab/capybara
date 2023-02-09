@@ -40,7 +40,7 @@ func GenerateProof(ctx context.Context, txHash common.Hash, rpcClient *Client) (
 	calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
 	calldat.Command.Params = []interface{}{txHash.String()}
 	myTx := new(RpcTransaction)
-	err := rpcClient.actualRpcCall(calldat, myTx)
+	err := rpcClient.ActualRpcCall(calldat, myTx)
 	if err != nil {
 
 		return nil, err
@@ -58,7 +58,7 @@ func GenerateProof(ctx context.Context, txHash common.Hash, rpcClient *Client) (
 	calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
 	calldat.Command.Params = []interface{}{myTx.BlockNumber, true}
 	myblock := new(json.RawMessage)
-	err = rpcClient.actualRpcCall(calldat, myblock)
+	err = rpcClient.ActualRpcCall(calldat, myblock)
 	if err != nil {
 
 		return nil, err
@@ -78,7 +78,7 @@ func GenerateProof(ctx context.Context, txHash common.Hash, rpcClient *Client) (
 		calldat = rpcClient.NewCallData("eth_getTransactionReceipt")
 		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
 		calldat.Command.Params = []interface{}{tx.Hash().String()}
-		err = rpcClient.actualRpcCall(calldat, receipt)
+		err = rpcClient.ActualRpcCall(calldat, receipt)
 		if err != nil {
 			return nil, err
 		}

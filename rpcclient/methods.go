@@ -25,7 +25,7 @@ func (rpcClient *Client) GetNetwork(rpcendpoint string) (*string, error) {
 	data.Context.TargetRPCEndpoint = rpcendpoint
 
 	net := new(string)
-	err := rpcClient.actualRpcCall(data, net)
+	err := rpcClient.ActualRpcCall(data, net)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (rpcClient *Client) GetNodeInfo(rpcendpoint string) (*NodeInfo, error) {
 	data := rpcClient.NewCallData("admin_nodeInfo")
 	data.Context.TargetRPCEndpoint = rpcendpoint
 	ni := new(NodeInfo)
-	err := rpcClient.actualRpcCall(data, ni)
+	err := rpcClient.ActualRpcCall(data, ni)
 	return ni, err
 }
 
@@ -64,7 +64,7 @@ func (rpcClient *Client) DirectMethod(w http.ResponseWriter, rq *http.Request) (
 		}
 		// End of param handling
 		data.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
-		err := rpcClient.actualRpcCall(data, new(string))
+		err := rpcClient.ActualRpcCall(data, new(string))
 		fmt.Fprintln(w, "Error: ", err)
 		fmt.Fprintln(w, string(data.Response.Result))
 	} else {
@@ -154,7 +154,7 @@ func (rpcClient *Client) getClientVersion(rpcendpoint string) (*string, error) {
 	data := rpcClient.NewCallData("web3_clientVersion")
 	data.Context.TargetRPCEndpoint = rpcendpoint
 	v := new(string)
-	err := rpcClient.actualRpcCall(data, v)
+	err := rpcClient.ActualRpcCall(data, v)
 	return v, err
 }
 
@@ -162,7 +162,7 @@ func (rpcClient *Client) findPeersOf(n *Node) error {
 	data := rpcClient.NewCallData("admin_peers")
 	data.Context.TargetRPCEndpoint = n.PrefRPCURL + ":" + strconv.Itoa(n.RPCPort)
 	pi := new([]PeerInfo)
-	err := rpcClient.actualRpcCall(data, pi)
+	err := rpcClient.ActualRpcCall(data, pi)
 	if err != nil {
 		n.IsReachable = false
 		return err
@@ -332,7 +332,7 @@ func (rpcClient *Client) TxPoolOf(nd *Node) error {
 	data := rpcClient.NewCallData(method)
 	data.Context.TargetRPCEndpoint = nd.PrefRPCURL + ":" + strconv.Itoa(nd.RPCPort)
 	txp := new([]TxpoolTransaction)
-	err := rpcClient.actualRpcCall(data, txp)
+	err := rpcClient.ActualRpcCall(data, txp)
 	if err != nil {
 		nd.IsReachable = false
 		fmt.Println(err)
@@ -348,7 +348,7 @@ func (rpcClient *Client) IsNodeSyncing(nd *Node) error {
 	data := rpcClient.NewCallData("eth_syncing")
 	data.Context.TargetRPCEndpoint = nd.PrefRPCURL + ":" + strconv.Itoa(nd.RPCPort)
 	sync := new(bool)
-	err := rpcClient.actualRpcCall(data, sync)
+	err := rpcClient.ActualRpcCall(data, sync)
 	if err != nil {
 		nd.IsReachable = false
 		fmt.Println(err)
@@ -373,7 +373,7 @@ func (rpcClient *Client) findBlockNoOf(n *Node) error {
 	data := rpcClient.NewCallData("eth_blockNumber")
 	data.Context.TargetRPCEndpoint = n.PrefRPCURL + ":" + strconv.Itoa(n.RPCPort)
 	bnp := ""
-	err := rpcClient.actualRpcCall(data, &bnp)
+	err := rpcClient.ActualRpcCall(data, &bnp)
 	if err != nil {
 		return err
 	}
@@ -470,7 +470,7 @@ func (rpcClient *Client) BlockActions(data *templates.RenderData, rq *http.Reque
 		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
 		calldat.Command.Params = []interface{}{blockhex, true}
 		block = new(BlockResult)
-		err = rpcClient.actualRpcCall(calldat, block)
+		err = rpcClient.ActualRpcCall(calldat, block)
 		if err != nil {
 			data.Error = err
 			return
@@ -504,7 +504,7 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 		calldat.Command.Params = []interface{}{txHash}
 		th := new(TxH)
 		transaction := new(TransactionResult)
-		err := rpcClient.actualRpcCall(calldat, transaction)
+		err := rpcClient.ActualRpcCall(calldat, transaction)
 		if err != nil {
 			data.Error = err
 			return
@@ -525,7 +525,7 @@ func (rpcClient *Client) Transactions(data *templates.RenderData, rq *http.Reque
 		calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
 		calldat.Command.Params = []interface{}{blockhex, true}
 		block := new(BlockResult)
-		err = rpcClient.actualRpcCall(calldat, block)
+		err = rpcClient.ActualRpcCall(calldat, block)
 		if err != nil {
 			data.Error = err
 			return
@@ -556,7 +556,7 @@ func (rpcClient *Client) TxPool(data *templates.RenderData, rq *http.Request) {
 	calldat.Context.TargetRPCEndpoint = rpcClient.DefaultRPCEndpoint
 	calldat.Command.Params = []interface{}{}
 	var txPoolList []TxpoolTransaction
-	err := rpcClient.actualRpcCall(calldat, &txPoolList)
+	err := rpcClient.ActualRpcCall(calldat, &txPoolList)
 	txpool := new(TxPoolResult)
 	txpool.Transactions = txPoolList
 	if err != nil {
@@ -608,7 +608,7 @@ func (rpcClient *Client) TxPoolTx(data *templates.RenderData, rq *http.Request) 
 	}
 	calldat.Command.Params = []interface{}{1000, filterParams}
 	var txPoolTxList []TxPoolTransactionResult
-	err := rpcClient.actualRpcCall(calldat, &txPoolTxList)
+	err := rpcClient.ActualRpcCall(calldat, &txPoolTxList)
 	txpoolTransactionList := new(TxPoolTransactionList)
 	txpoolTransactionList.Transactions = txPoolTxList
 	if err != nil {
